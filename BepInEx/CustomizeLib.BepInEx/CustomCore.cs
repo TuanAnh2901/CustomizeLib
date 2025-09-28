@@ -851,7 +851,7 @@ namespace CustomizeLib.BepInEx
         {
             ClassInjector.RegisterTypeInIl2Cpp<CoroutineRunner>();
             ClassInjector.RegisterTypeInIl2Cpp<CustomPlantMonoBehaviour>();
-            ClassInjector.RegisterTypeInIl2Cpp<SelectCustomPlants>();
+            //ClassInjector.RegisterTypeInIl2Cpp<SelectCustomPlants>();
             ClassInjector.RegisterTypeInIl2Cpp<CheckCardState>();
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
@@ -909,7 +909,7 @@ namespace CustomizeLib.BepInEx
         /// </summary>
         public static Dictionary<PlantType, List<Func<Transform?>>> CustomNormalCards { get; set; } = [];
 
-        public static Dictionary<ZombieType, (GameObject, int, ZombieData.ZombieData_)> CustomZombies { get; set; } = [];
+        public static Dictionary<ZombieType, (GameObject, int, ZombieDataManager.ZombieData)> CustomZombies { get; set; } = [];
 
         public static List<ZombieType> CustomZombieTypes { get; set; } = [];
 

@@ -728,27 +728,27 @@ namespace CustomizeLib.MelonLoader
     /// <summary>
     /// 点击其他Button，隐藏二创植物界面
     /// </summary>
-    [HarmonyPatch(typeof(UIButton))]
-    public static class HideCustomPlantCards
-    {
-        [HarmonyPatch(nameof(UIButton.OnMouseUpAsButton))]
-        [HarmonyPostfix]
-        public static void Postfix()
-        {
-            if (SelectCustomPlants.MyPageParent != null && SelectCustomPlants.MyPageParent.active)
-                SelectCustomPlants.MyPageParent.SetActive(false);
-        }
+    //[HarmonyPatch(typeof(UIButton))]
+    //public static class HideCustomPlantCards
+    //{
+    //    [HarmonyPatch(nameof(UIButton.OnMouseUpAsButton))]
+    //    [HarmonyPostfix]
+    //    public static void Postfix()
+    //    {
+    //        if (SelectCustomPlants.MyPageParent != null && SelectCustomPlants.MyPageParent.active)
+    //            SelectCustomPlants.MyPageParent.SetActive(false);
+    //    }
 
-        [HarmonyPatch(nameof(UIButton.Start))]
-        [HarmonyPostfix]
-        public static void PostfixStart(UIButton __instance)
-        {
-            if (__instance.name == "LastPage" && Board.Instance != null && Board.Instance.isIZ)
-            {
-                SelectCustomPlants.InitCustomCards_IZ();
-            }
-        }
-    }
+    //    [HarmonyPatch(nameof(UIButton.Start))]
+    //    [HarmonyPostfix]
+    //    public static void PostfixStart(UIButton __instance)
+    //    {
+    //        if (__instance.name == "LastPage" && Board.Instance != null && Board.Instance.isIZ)
+    //        {
+    //            SelectCustomPlants.InitCustomCards_IZ();
+    //        }
+    //    }
+    //}
 
     [HarmonyPatch(typeof(InGameUI))]
     public static class InGameUIPatch
@@ -1260,15 +1260,16 @@ namespace CustomizeLib.MelonLoader
     /// <summary>
     /// 进入一局游戏，显示二创植物Button
     /// </summary>
-    [HarmonyPatch(typeof(Board), nameof(Board.Start))]
-    public static class ShowCustomPlantCards
-    {
-        [HarmonyPostfix]
-        private static void Postfix()
-        {
-            SelectCustomPlants.InitCustomCards();
-        }
-    }
+    /// Commented out to implement new SelecCustomPlants system
+    //[HarmonyPatch(typeof(Board), nameof(Board.Start))]
+    //public static class ShowCustomPlantCards
+    //{
+    //    [HarmonyPostfix]
+    //    private static void Postfix()
+    //    {
+    //        SelectCustomPlants.InitCustomCards();
+    //    }
+    //}
 
     /*/// <summary>
     /// 进入一局游戏，显示作者
@@ -2336,16 +2337,16 @@ namespace CustomizeLib.MelonLoader
     /// <summary>
     /// 注册二创僵尸数据
     /// </summary>
-    [HarmonyPatch(typeof(ZombieData))]
+    [HarmonyPatch(typeof(ZombieDataManager))]
     public static class ZombieDataPatch
     {
-        [HarmonyPatch("InitZombieData")]
+        [HarmonyPatch("LoadData")]
         [HarmonyPostfix]
-        public static void InitZombieData()
+        public static void LoadData()
         {
             foreach (var z in CustomCore.CustomZombies)
             {
-                ZombieData.zombieData[(int)z.Key] = z.Value.Item3;
+                ZombieDataManager.zombieDataDic[(ZombieType)z.Key] = z.Value.Item3;
             }
         }
     }

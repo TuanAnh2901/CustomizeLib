@@ -915,7 +915,7 @@ namespace CustomizeLib.MelonLoader
         /// <summary>
         /// 自定义僵尸列表
         /// </summary>
-        public static Dictionary<ZombieType, (GameObject, int, ZombieData.ZombieData_)> CustomZombies { get; set; } = [];
+        public static Dictionary<ZombieType, (GameObject, int, ZombieDataManager.ZombieData)> CustomZombies { get; set; } = [];
 
         /// <summary>
         /// 二创僵尸类型列表
