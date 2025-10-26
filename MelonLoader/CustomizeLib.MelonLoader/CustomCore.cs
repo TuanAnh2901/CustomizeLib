@@ -283,7 +283,7 @@ namespace CustomizeLib.MelonLoader
         /// <param name="level">词条最高等级</param>
         /// <returns>分到的词条id</returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1)
+            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1, TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
@@ -924,17 +924,6 @@ namespace CustomizeLib.MelonLoader
             GameObject ccore = new("CustomizeLib by Infinite75");
             ccore.AddComponent<CustomizeLib>().CustomCore = this;
             UnityEngine.Object.DontDestroyOnLoad(ccore);
-        }
-
-        public override void OnUpdate()
-        {
-            base.OnUpdate();
-            if (Input.GetKeyDown(KeyCode.F10))
-            {
-                MelonLogger.Msg(TravelMgr.Instance is null);
-                if (TravelMgr.Instance is not null)
-                    MelonLogger.Msg(TravelMgr.Instance.GetData("CustomBuffsLevel") is null);
-            }
         }
 
         /// <summary>
