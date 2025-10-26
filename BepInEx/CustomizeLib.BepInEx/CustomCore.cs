@@ -1,6 +1,7 @@
 ﻿// #define DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF // 启用多级词条
 
 using BepInEx;
+using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
@@ -22,7 +23,7 @@ namespace CustomizeLib.BepInEx
         }
     }
 
-    [BepInPlugin("inf75.pvzcustomization", "PVZCustomization", "2.8")]
+    [BepInPlugin("salmon.inf75.pvzcustomization", "PVZCustomization", "3.0.1")]
     public class CustomCore : BasePlugin
     {
         public static class TypeMgrExtra
@@ -56,6 +57,7 @@ namespace CustomizeLib.BepInEx
             public static List<PlantType> UmbrellaPlants { get; set; } = [];
             public static List<ZombieType> UselessHypnoZombie { get; set; } = [];
             public static List<ZombieType> WaterZombie { get; set; } = [];
+            public static Dictionary<PlantType, CardLevel> LevelPlants { get; set; } = [];
         }
 
         /// <summary>
@@ -302,9 +304,10 @@ namespace CustomizeLib.BepInEx
         /// <param name="cost">词条商店花费积分</param>
         /// <param name="color">词条颜色</param>
         /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="level">词条最高等级</param>
         /// <returns>分到的词条id</returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing)
+            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
@@ -314,6 +317,8 @@ namespace CustomizeLib.BepInEx
                         int i = TravelMgr.advancedBuffs.Count;
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
                         TravelMgr.advancedBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 case BuffType.UltimateBuff:
@@ -321,6 +326,8 @@ namespace CustomizeLib.BepInEx
                         int i = TravelMgr.ultimateBuffs.Count;
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
                         TravelMgr.ultimateBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 case BuffType.Debuff:
@@ -328,6 +335,8 @@ namespace CustomizeLib.BepInEx
                         int i = TravelMgr.debuffs.Count;
                         CustomDebuffs.Add(i, text);
                         TravelMgr.debuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 default:
@@ -928,9 +937,12 @@ namespace CustomizeLib.BepInEx
                 p3.Die();
             }, failAction);
 
-        public static void RegisterCustomFusionEvent(PlantType baseType, PlantType fusionType, Action<Plant, Plant> action) =>
-            CustomFusionEvents.Add((baseType, fusionType), action);
-
+        /// <summary>
+        /// 注册自定义子弹移动方式
+        /// </summary>
+        /// <param name="id">移动方式id</param>
+        /// <param name="action">移动逻辑</param>
+        public static void RegisterCustomBulletMovingWay(int id, Action<Bullet> action) => CustomBulletMovingWay.Add(id, action);
         public override void Load()
         {
             ClassInjector.RegisterTypeInIl2Cpp<CoroutineRunner>();
@@ -941,6 +953,7 @@ namespace CustomizeLib.BepInEx
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             Instance = new(this);
+            CLogger = this.Log;
             // TextureStore.Init();
         }
 
@@ -1029,19 +1042,26 @@ namespace CustomizeLib.BepInEx
         /// 自定义融合洋芋配方
         /// </summary>
         public static Dictionary<(PlantType, PlantType, PlantType), (List<Action<Plant?, Plant?, Plant?>>, List<Action<Plant?, Plant?, Plant?>>)> CustomMixBombFusions { get; set; } = []; // (左植物, 中植物, 右植物), (成功事件, 失败事件)
+
+        /// <summary>
+        /// 自定义子弹移动方式
+        /// </summary>
+        public static Dictionary<int, Action<Bullet>> CustomBulletMovingWay { get; set; } = [];
+
+        /// <summary>
+        /// 自定义多级词条列表 Key：（Buff类型，ID） Value：（在列表的index，等级）
+        /// </summary>
+        public static Dictionary<(BuffType, int), (int, int)> CustomBuffsLevel { get; set; } = [];
         /// <summary>
         /// 自定义究极植物列表
         /// </summary>
         public static List<PlantType> CustomUltimatePlants { get; set; } = [];
 
         /// <summary>
-        /// 自定义融合事件列表（Key：底植物，融合植物，Value：底植物，结果植物）
-        /// </summary>
-        public static Dictionary<(PlantType, PlantType), Action<Plant, Plant>> CustomFusionEvents { get; set; } = [];
-
-        /// <summary>
         /// 存卡片检查的列表，用于管理Packet显示，你不应该使用它
         /// </summary>
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
+
+        public static ManualLogSource CLogger { get; set; } = null!;
     }
 }

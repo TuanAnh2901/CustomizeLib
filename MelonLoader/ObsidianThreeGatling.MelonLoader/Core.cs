@@ -64,7 +64,7 @@ namespace ObsidianThreeGatling.MelonLoader
 
         public void Update()
         {
-            if (!init)
+            if (!init && GameAPP.theGameStatus == GameStatus.InGame)
             {
                 totalDamage = plant.attributeCount;
                 int damage = totalDamage / 2000 * 40 + 120;

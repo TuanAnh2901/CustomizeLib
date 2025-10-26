@@ -18,8 +18,38 @@ namespace CustomizeLib.BepInEx
         /// <param name="component"></param>
         /// <param name="name">数据名</param>
         /// <returns>数据值</returns>
-        /// <exception cref="ArgumentException"></exception>
-        public static object GetData(this Component component, String name) => component.gameObject.GetData(name);
+        public static object GetData(this Component component, String name)
+        {
+            if (component == null)
+                return null;
+            return component.gameObject.GetData(name);
+        }
+
+        /// <summary>
+        /// 获取扩展数据
+        /// </summary>
+        /// <typeparam name="T">返回类型</typeparam>
+        /// <param name="component"></param>
+        /// <param name="name">数据名</param>
+        /// <returns>数据值</returns>
+        public static T GetData<T>(this Component component, String name)
+        {
+            if (component == null)
+                return default;
+            try
+            {
+                return (T)component.gameObject.GetData(name);
+            }
+            catch (Exception e)
+            {
+                CustomCore.CLogger.LogInfo(
+                    "Error on convert type (at Get Extension Data), \n" +
+                    $"Message   : {e.Message}\n" +
+                    $"StackTrace: {e.StackTrace}\n"
+                    );
+                return default;
+            }
+        }
 
         /// <summary>
         /// 设置扩展数据
@@ -27,7 +57,12 @@ namespace CustomizeLib.BepInEx
         /// <param name="component"></param>
         /// <param name="name">数据名</param>
         /// <param name="data">数据值</param>
-        public static void SetData(this Component component, String name, object data) => component.gameObject.SetData(name, data);
+        public static void SetData(this Component component, String name, object data)
+        {
+            if (component == null)
+                return;
+            component.gameObject.SetData(name, data);
+        }
 
         /// <summary>
         /// 获取扩展数据
@@ -35,15 +70,16 @@ namespace CustomizeLib.BepInEx
         /// <param name="gameObject"></param>
         /// <param name="name">数据名</param>
         /// <returns>数据值</returns>
-        /// <exception cref="ArgumentException"></exception>
         public static object GetData(this GameObject gameObject, String name)
         {
+            if (gameObject == null)
+                return null;
             if (gameObject.TryGetComponent<ExtensionDataComponent>(out var edc))
                 return edc.GetData(name);
             else
             {
                 gameObject.AddComponent<ExtensionDataComponent>();
-                throw new ArgumentException("No data with name " + name);
+                return null;
             }
         }
 
@@ -55,6 +91,8 @@ namespace CustomizeLib.BepInEx
         /// <param name="data">数据值</param>
         public static void SetData(this GameObject gameObject, String name, object data)
         {
+            if (gameObject == null)
+                return;
             if (gameObject.TryGetComponent<ExtensionDataComponent>(out var edc))
                 edc.SetData(name, data);
             else
@@ -110,9 +148,9 @@ namespace CustomizeLib.BepInEx
                 if (staticData[type].ContainsKey(name))
                     return staticData[type][name];
                 else
-                    throw new ArgumentException("No data with name " + name + " class " + type);
+                    return null;
             else
-                throw new ArgumentException("No data with name " + name);
+                return null;
         }
 
         /// <summary>
@@ -123,6 +161,8 @@ namespace CustomizeLib.BepInEx
         /// <param name="data">数据值</param>
         public static void SetData(this object obj, String name, object data)
         {
+            if (obj == null)
+                return;
             if (instanceData.ContainsKey(obj.GetType()))
                 if (instanceData[obj.GetType()].ContainsKey(obj))
                     if (instanceData[obj.GetType()][obj].ContainsKey(name))
@@ -144,16 +184,13 @@ namespace CustomizeLib.BepInEx
         /// <exception cref="ArgumentException"></exception>
         public static object GetData(this object obj, String name)
         {
+            if (obj == null)
+                return null;
             if (instanceData.ContainsKey(obj.GetType()))
                 if (instanceData[obj.GetType()].ContainsKey(obj))
                     if (instanceData[obj.GetType()][obj].ContainsKey(name))
                         return instanceData[obj.GetType()][obj][name];
-                    else
-                        throw new ArgumentException("No data with name " + name + " class " + obj.GetType());
-                else
-                    throw new ArgumentException("No data with name " + name);
-            else
-                throw new ArgumentException("No data with name " + name);
+            return null;
         }
     }
 
@@ -165,8 +202,7 @@ namespace CustomizeLib.BepInEx
         {
             if (data.ContainsKey(name))
                 return data[name];
-            else
-                throw new ArgumentException("No data with name " + name);
+            return null;
         }
 
         public void SetData(String name, object data)

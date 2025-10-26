@@ -11,7 +11,7 @@ using UnityEngine;
 ///Credit to likefengzi(https://github.com/likefengzi)(https://space.bilibili.com/237491236)
 ///
 
-[assembly: MelonInfo(typeof(CustomCore), "PVZRHCustomization", "2.8", "Infinite75,likefengzi", null)]
+[assembly: MelonInfo(typeof(CustomCore), "PVZRHCustomization", "3.0.1", "Infinite75,likefengzi,Salmon", null)]
 [assembly: MelonGame("LanPiaoPiao", "PlantsVsZombiesRH")]
 [assembly: MelonPlatformDomain(MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP)]
 
@@ -43,6 +43,7 @@ namespace CustomizeLib.MelonLoader
             public static List<PlantType> IsTangkelp { get; set; } = [];
             public static List<PlantType> IsWaterPlant { get; set; } = [];
             public static List<PlantType> UmbrellaPlants { get; set; } = [];
+            public static Dictionary<PlantType, CardLevel> LevelPlants { get; set; } = [];
         }
 
         /// <summary>
@@ -279,9 +280,10 @@ namespace CustomizeLib.MelonLoader
         /// <param name="cost">词条商店花费积分</param>
         /// <param name="color">词条颜色</param>
         /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="level">词条最高等级</param>
         /// <returns>分到的词条id</returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing)
+            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
@@ -291,6 +293,8 @@ namespace CustomizeLib.MelonLoader
                         int i = TravelMgr.advancedBuffs.Count;
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
                         TravelMgr.advancedBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 case BuffType.UltimateBuff:
@@ -298,6 +302,8 @@ namespace CustomizeLib.MelonLoader
                         int i = TravelMgr.ultimateBuffs.Count;
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
                         TravelMgr.ultimateBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 case BuffType.Debuff:
@@ -305,6 +311,8 @@ namespace CustomizeLib.MelonLoader
                         int i = TravelMgr.debuffs.Count;
                         CustomDebuffs.Add(i, text);
                         TravelMgr.debuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         return i;
                     }
                 default:
@@ -904,8 +912,12 @@ namespace CustomizeLib.MelonLoader
                 p3.Die();
             }, failAction);
 
-        public static void RegisterCustomFusionEvent(PlantType baseType, PlantType fusionType, Action<Plant, Plant> action) =>
-            CustomFusionEvents.Add((baseType, fusionType), action);
+        /// <summary>
+        /// 注册自定义子弹移动方式
+        /// </summary>
+        /// <param name="id">移动方式id</param>
+        /// <param name="action">移动逻辑</param>
+        public static void RegisterCustomBulletMovingWay(int id, Action<Bullet> action) => CustomBulletMovingWay.Add(id, action);
 
         public override void OnLateInitializeMelon()
         {
@@ -913,7 +925,18 @@ namespace CustomizeLib.MelonLoader
             ccore.AddComponent<CustomizeLib>().CustomCore = this;
             UnityEngine.Object.DontDestroyOnLoad(ccore);
         }
-        
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                MelonLogger.Msg(TravelMgr.Instance is null);
+                if (TravelMgr.Instance is not null)
+                    MelonLogger.Msg(TravelMgr.Instance.GetData("CustomBuffsLevel") is null);
+            }
+        }
+
         /// <summary>
         /// 自定义普通词条列表
         /// </summary>
@@ -1044,11 +1067,6 @@ namespace CustomizeLib.MelonLoader
         public static List<PlantType> CustomUltimatePlants { get; set; } = [];
 
         /// <summary>
-        /// 自定义融合事件列表（Key：底植物，融合植物，Value：底植物，结果植物）
-        /// </summary>
-        public static Dictionary<(PlantType, PlantType), Action<Plant, Plant>> CustomFusionEvents { get; set; } = [];
-
-        /// <summary>
         /// 僵尸图鉴列表
         /// </summary>
         public static Dictionary<ZombieType, (string, string)> ZombiesAlmanac { get; set; } = [];
@@ -1057,6 +1075,16 @@ namespace CustomizeLib.MelonLoader
         /// 自定义融合洋芋配方
         /// </summary>
         public static Dictionary<(PlantType, PlantType, PlantType), (List<Action<Plant?, Plant?, Plant?>>, List<Action<Plant?, Plant?, Plant?>>)> CustomMixBombFusions { get; set; } = []; // (左植物, 中植物, 右植物), (成功事件, 失败事件)
+
+        /// <summary>
+        /// 自定义子弹移动方式
+        /// </summary>
+        public static Dictionary<int, Action<Bullet>> CustomBulletMovingWay { get; set; } = [];
+
+        /// <summary>
+        /// 自定义多级词条列表 Key：（Buff类型，ID） Value：（在列表的index，等级）
+        /// </summary>
+        public static Dictionary<(BuffType, int), (int, int)> CustomBuffsLevel { get; set; } = [];
 
         /// <summary>
         /// 换贴图协程对象

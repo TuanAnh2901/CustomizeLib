@@ -153,25 +153,16 @@ namespace CustomizeLib.BepInEx
             }
         }
 
+
         //递归，找shoot，但是一些奇怪的植物不行
         public static void FindShoot(this Plant plant, Transform parent)
         {
-            // 遍历当前对象的所有组件
-            Component[] components = parent.GetComponents<Component>();
-            foreach (Component component in components)
-            {
-                if (component.name == "Shoot" || component.name == "Shoot1")
-                {
-                    plant.shoot = component.transform;
-                }
+            String name = parent.name.ToLower();
+            if (name == "shoot" || name == "shoot1")
+                plant.shoot = parent;
+            if (name == "shoot2")
+                plant.shoot2 = parent;
 
-                if (component.name == "Shoot2")
-                {
-                    plant.shoot2 = component.transform;
-                }
-            }
-
-            // 递归遍历所有子对象
             for (int i = 0; i < parent.childCount; i++)
             {
                 plant.FindShoot(parent.GetChild(i));
@@ -720,6 +711,8 @@ namespace CustomizeLib.BepInEx
 
         public static bool IsNotNull<T>(this T obj) => obj is not null;
 
+        public static int ToInt(this bool value) => value ? 1 : 0;
+
         public static LevelType CustomLevelType => (LevelType)66;
 
         /// <summary>
@@ -868,6 +861,38 @@ namespace CustomizeLib.BepInEx
         }
     #endregion
 #endif
+
+        /// <summary>
+        /// 自定义词条是否是多级词条
+        /// </summary>
+        /// <param name="buffType">词条类型</param>
+        /// <param name="returnID">对应的数组的ID（索引），即注册词条是返回的ID</param>
+        /// <returns>Item1: 是否是多级词条, Item2: 在CustomBuffsLevel中的索引</returns>
+        public static (bool, int) IsMultiLevelBuff(BuffType buffType, int returnID)
+        {
+            var list = CustomCore.CustomBuffsLevel.Where(kvp => kvp.Key.Item1 == buffType && kvp.Key.Item2 == returnID).ToList();
+            if (list.Count > 0)
+            {
+                var index = list[0].Value.Item1;
+                return (list.Count > 0, index);
+            }
+            return (false, -1);
+        }
+
+        public static int TravelCustomBuffLevel(BuffType buffType, int returnID)
+        {
+            var result = IsMultiLevelBuff(buffType, returnID);
+            if (result.Item1)
+            {
+                if (TravelMgr.Instance is null)
+                    return 0;
+                var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+                if (array is null)
+                    return 0;
+                return array[result.Item2];
+            }
+            return 0;
+        }
     }
 
     // json对象

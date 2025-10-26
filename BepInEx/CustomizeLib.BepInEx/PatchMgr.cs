@@ -1,8 +1,8 @@
 // #define DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF // 启用多级词条
-// #define DEBUG_FEATURE__ENABLE_AUTO_EXTENSION // 启用自动扩展
 
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using TMPro;
@@ -26,14 +26,14 @@ namespace CustomizeLib.BepInEx
         public static bool Prefix(MixBomb __instance)
         {
             bool success = false;
-            if (__instance is not null)
+            if (__instance != null)
             {
                 List<Plant> plants = Lawnf.Get1x1Plants(__instance.thePlantColumn, __instance.thePlantRow).ToArray().ToList();
                 if (plants is null)
                     return true;
                 foreach (Plant plant in plants)
                 {
-                    if (plant is not null && CustomCore.CustomMixBombFusions.Keys.Any(k => k.Item2 == plant.thePlantType))
+                    if (plant != null && CustomCore.CustomMixBombFusions.Keys.Any(k => k.Item2 == plant.thePlantType))
                     {
                         List<(PlantType, PlantType, PlantType)> mixBombFusions = CustomCore.CustomMixBombFusions
                             .Where(kvp => kvp.Key.Item2 == plant.thePlantType)
@@ -63,7 +63,7 @@ namespace CustomizeLib.BepInEx
                     }
                 }
             }
-            if (__instance is not null && success)
+            if (__instance != null && success)
                 __instance.Die();
             if (success)
                 return false;
@@ -547,7 +547,7 @@ namespace CustomizeLib.BepInEx
         [HarmonyPostfix]
         public static void Postfix_SetPlant(CreatePlant __instance, ref int newColumn, ref int newRow, ref GameObject __result)
         {
-            if (__result is not null && __result.TryGetComponent<Plant>(out var plant) &&
+            if (__result != null && __result.TryGetComponent<Plant>(out var plant) &&
                 CustomCore.CustomPlantTypes.Contains(plant.thePlantType))
             {
                 TypeMgr.GetPlantTag(plant);
@@ -628,6 +628,102 @@ namespace CustomizeLib.BepInEx
                 }
             }
         }
+
+        [HarmonyPatch(nameof(Lawnf.TravelAdvanced), new Type[] { typeof(AdvBuff) })]
+        [HarmonyPostfix]
+        public static void PostTravelAdvanced_0(ref AdvBuff buff, ref bool __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.AdvancedBuff, (int)buff);
+            if (!result.Item1)
+                return;
+            int index = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index] > 0;
+        }
+
+        [HarmonyPatch(nameof(Lawnf.TravelAdvanced), new Type[] { typeof(int) })]
+        [HarmonyPostfix]
+        public static void PostTravelAdvanced_1(ref int i, ref bool __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.AdvancedBuff, i);
+            if (!result.Item1)
+                return;
+            int index = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index] > 0;
+        }
+
+        [HarmonyPatch(nameof(Lawnf.TravelUltimate), new Type[] { typeof(UltiBuffs) })]
+        [HarmonyPostfix]
+        public static void PostTravelUltimate_0(ref UltiBuffs i, ref bool __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.UltimateBuff, (int)i);
+            if (!result.Item1)
+                return;
+            int index = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index] > 0;
+        }
+
+        [HarmonyPatch(nameof(Lawnf.TravelUltimate), new Type[] { typeof(int) })]
+        [HarmonyPostfix]
+        public static void PostTravelUltimate_1(ref int i, ref bool __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.UltimateBuff, i);
+            if (!result.Item1)
+                return;
+            int index = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index] > 0;
+        }
+
+        [HarmonyPatch(nameof(Lawnf.TravelUltimateLevel))]
+        [HarmonyPostfix]
+        public static void PostTravelUltimateLevel(ref int index, ref int __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.UltimateBuff, index);
+            if (!result.Item1)
+                return;
+            int index2 = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index2];
+        }
+
+        [HarmonyPatch(nameof(Lawnf.TravelDebuff))]
+        [HarmonyPostfix]
+        public static void PostTravelDebuff(ref int i, ref bool __result)
+        {
+            var result = Utils.IsMultiLevelBuff(BuffType.Debuff, i);
+            if (!result.Item1)
+                return;
+            int index = result.Item2;
+            if (TravelMgr.Instance == null)
+                return;
+            var array = TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel");
+            if (array is null)
+                return;
+            __result = array[index] > 0;
+        }
     }
 
     /// <summary>
@@ -640,7 +736,7 @@ namespace CustomizeLib.BepInEx
         [HarmonyPostfix]
         public static void Postfix()
         {
-            if (SelectCustomPlants.MyPageParent != null && SelectCustomPlants.MyPageParent.active)
+            if (SelectCustomPlants.MyPageParent != null && SelectCustomPlants.MyPageParent.active && GameAPP.theGameStatus != GameStatus.BigGarden)
                 SelectCustomPlants.MyPageParent.SetActive(false);
         }
 
@@ -758,7 +854,7 @@ namespace CustomizeLib.BepInEx
             var levelData = CustomCore.CustomLevels[GameAPP.theBoardLevel];
             if (direction == "right")
             {
-                if (__instance.board is not null)
+                if (__instance.board != null)
                 {
                     if (__instance.board.cardSelectable)
                     {
@@ -783,7 +879,7 @@ namespace CustomizeLib.BepInEx
             }
             else if (direction == "left")
             {
-                if (__instance.board is null) return false;
+                if (__instance.board == null) return false;
 
                 if (!__instance.board.cardSelectable)
                 {
@@ -918,7 +1014,7 @@ namespace CustomizeLib.BepInEx
         {
             for (int i = __result.Count - 1; i >= 0; i--)
             {
-                if (__result[i] is not null && TypeMgr.BigNut(__result[i].thePlantType))
+                if (__result.ToArray()[i] != null && TypeMgr.BigNut(__result.ToArray()[i].thePlantType))
                 {
                     __result.RemoveAt(i);
                 }
@@ -948,7 +1044,6 @@ namespace CustomizeLib.BepInEx
         [HarmonyPrefix]
         public static void Postfix()
         {
-#if DEBUG_FEATURE__ENABLE_AUTO_EXTENSION
             #region 自动扩容
             // 扩容plantData
             if (CustomCore.CustomPlants.Count > 0)
@@ -976,8 +1071,45 @@ namespace CustomizeLib.BepInEx
                 Array.Copy(GameAPP.spritePrefab, spritePrefab, GameAPP.spritePrefab.Length);
                 GameAPP.spritePrefab = spritePrefab;
             }
-#endregion
-#endif
+
+            // 扩容data融合数组
+            if (CustomCore.CustomPlants.Count > 0)
+            {
+                var arr = MixData.data.Cast<Il2CppSystem.Array>();
+                long max = (int)CustomCore.CustomPlants.Keys.Max() + 1;
+                var length_0 = arr.GetLength(0) < max ? max : arr.GetLength(0);
+                var length_1 = arr.GetLength(1) < max ? max : arr.GetLength(1);
+                var length = length_0 < length_1 ? length_1 : length_0;
+                var type = arr.GetValue(0, 0).GetIl2CppType();
+                var result = Il2CppSystem.Array.CreateInstance(type, length, length);
+                Il2CppSystem.Array.Copy(arr, result, arr.Length);
+                MixData.data = result;
+            }
+
+            // 扩容disMixDatas拆分数组
+            if (CustomCore.CustomPlants.Count > 0)
+            {
+                long size_disMixDatas = (int)CustomCore.CustomPlants.Keys.Max() < MixData.disMixDatas.Length ? MixData.disMixDatas.Length : (int)CustomCore.CustomPlants.Keys.Max();
+                MixData.DisMixData[] disMixDatas = new MixData.DisMixData[size_disMixDatas + 1];
+                Array.Copy(MixData.disMixDatas, disMixDatas, MixData.disMixDatas.Length);
+                MixData.disMixDatas = disMixDatas;
+            }
+
+            // 扩容randomData随机融合数组
+            if (CustomCore.CustomPlants.Count > 0)
+            {
+                var arr = MixData.randomData.Cast<Il2CppSystem.Array>();
+                long max = (int)CustomCore.CustomPlants.Keys.Max() + 1;
+                var length_0 = arr.GetLength(0) < max ? max : arr.GetLength(0);
+                var length_1 = arr.GetLength(1) < max ? max : arr.GetLength(1);
+                var length = length_0 < length_1 ? length_1 : length_0;
+                var type = arr.GetValue(0, 0).GetIl2CppType();
+                var result = Il2CppSystem.Array.CreateInstance(type, length, length);
+                Il2CppSystem.Array.Copy(arr, result, arr.Length);
+                MixData.randomData = result;
+            }
+            #endregion
+
             foreach (var plant in CustomCore.CustomPlants)//二创植物
             {
                 GameAPP.resourcesManager.plantPrefabs[plant.Key] = plant.Value.Prefab;//注册预制体
@@ -1025,6 +1157,19 @@ namespace CustomizeLib.BepInEx
             {
                 GameAPP.spritePrefab[spr.Key] = spr.Value;
             }
+
+            // 注册红卡
+            var propertyInfo = typeof(TypeMgr).GetProperty("RedPlant", BindingFlags.Static | BindingFlags.Public);
+            if (propertyInfo is null)
+                return;
+            var value = propertyInfo.GetValue(null);
+            if (value is null)
+                return;
+            var redPlant = (Il2CppSystem.Collections.Generic.HashSet<PlantType>)value;
+            foreach (var (k, v) in CustomCore.TypeMgrExtra.LevelPlants)
+                if (v == CardLevel.Red)
+                    redPlant.Add(k);
+            propertyInfo.SetValue(null, redPlant);
         }
     }
 
@@ -1208,13 +1353,74 @@ namespace CustomizeLib.BepInEx
     /// <summary>
     /// 进入一局游戏，显示二创植物Button
     /// </summary>
-    [HarmonyPatch(typeof(Board), nameof(Board.Start))]
+    [HarmonyPatch(typeof(Board))]
     public static class Board_Patch
     {
+        [HarmonyPatch(nameof(Board.Start))]
         [HarmonyPostfix]
-        public static void Postfix()
+        public static void PostStart()
         {
             SelectCustomPlants.InitCustomCards();
+            if (TravelMgr.Instance == null)
+                return;
+            if (TravelMgr.Instance.GetData("LoadByEndless") is null)
+                TravelMgr.Instance.SetData("LoadByEndless", false);
+            if ((TravelMgr.Instance.GetData("CustomBuffsLevel") is null ||
+                TravelMgr.Instance.GetData<int[]>("CustomBuffsLevel").SequenceEqual(new int[CustomCore.CustomAdvancedBuffs.Count])) &&
+                !TravelMgr.Instance.GetData<bool>("LoadByEndless"))
+            {
+                TravelMgr.Instance.SetData("CustomBuffsLevel", new int[CustomCore.CustomAdvancedBuffs.Count]);
+            }
+        }
+
+        [HarmonyPatch(nameof(Board.Update))]
+        [HarmonyPostfix]
+        public static void PostUpdate()
+        {
+            if (TravelMgr.Instance == null)
+                return;
+            try
+            {
+                var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+                if (array is null)
+                    return;
+
+                foreach (var (key, value) in CustomCore.CustomBuffsLevel)
+                {
+                    var result = Utils.IsMultiLevelBuff(key.Item1, key.Item2);
+                    if (!result.Item1)
+                        continue;
+                    int index = result.Item2;
+                    switch (key.Item1)
+                    {
+                        case BuffType.AdvancedBuff:
+                            {
+                                if (!TravelMgr.Instance.advancedUpgrades[key.Item2])
+                                    array[index] = 0;
+                                if (array[index] <= 0 && TravelMgr.Instance.advancedUpgrades[key.Item2])
+                                    array[index] = 1;
+                            }
+                            break;
+                        case BuffType.UltimateBuff:
+                            {
+                                if (TravelMgr.Instance.ultimateUpgrades[key.Item2] <= 0)
+                                    array[index] = 0;
+                                if (array[index] <= 0 && TravelMgr.Instance.ultimateUpgrades[key.Item2] >= 1)
+                                    array[index] = TravelMgr.Instance.ultimateUpgrades[key.Item2];
+                            }
+                            break;
+                        case BuffType.Debuff:
+                            {
+                                if (!TravelMgr.Instance.debuff[key.Item2])
+                                    array[index] = 0;
+                                if (array[index] <= 0 && TravelMgr.Instance.debuff[key.Item2])
+                                    array[index] = 1;
+                            }
+                            break;
+                    }
+                }
+            }
+            catch (ArgumentException) { }
         }
     }
 
@@ -1430,6 +1636,9 @@ namespace CustomizeLib.BepInEx
     /// <summary>
     /// 二创词条文本染色
     /// </summary>
+    /// <summary>
+    /// 二创词条文本染色
+    /// </summary>
     [HarmonyPatch(typeof(TravelLookBuff))]
     public static class TravelLookBuffPatch
     {
@@ -1441,6 +1650,53 @@ namespace CustomizeLib.BepInEx
                 && CustomCore.CustomAdvancedBuffs[buffIndex].Item5 is not null)
             {
                 __instance.introduce.text = $"<color={CustomCore.CustomAdvancedBuffs[buffIndex].Item5}>{__instance.introduce.text}</color>";
+            }
+            var result = Utils.IsMultiLevelBuff(__instance.buffType, __instance.buffIndex);
+            try
+            {
+                if (result.Item1)
+                {
+                    var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+                    if (array is null)
+                        return;
+                    int index = result.Item2;
+                    var list = CustomCore.CustomBuffsLevel.Where(kvp => kvp.Key.Item1 == __instance.buffType && kvp.Key.Item2 == __instance.buffIndex).ToList();
+                    int maxLevel = 1;
+                    if (list.Count > 0)
+                        maxLevel = list[0].Value.Item2;
+                    if (TravelLookMenu.Instance.showAll)
+                    {
+                        __instance.SetText(array[index] != 0, array[index]);
+                        if (array[index] <= maxLevel &&
+                            array[index] != 0)
+                        {
+                            if (maxLevel > 1)
+                                __instance.SetText($"已开启（{array[index]}级）");
+                            else
+                                __instance.SetText($"已开启");
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if (array[index] < maxLevel && maxLevel != 1)
+                        {
+                            if (array[index] >= maxLevel)
+                                __instance.SetText("已满级");
+                            else
+                                __instance.SetText($"{array[index]}级");
+                        }
+                        if (array[index] >= maxLevel)
+                        {
+                            __instance.SetText("已满级");
+                        }
+                        TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+                CustomCore.CLogger.LogInfo("Can't get data");
             }
 
 #if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
@@ -1492,7 +1748,110 @@ namespace CustomizeLib.BepInEx
             #endregion
 #endif
         }
-
+        /// <summary>
+        /// 高级词条升级处理
+        /// </summary>
+        [HarmonyPatch(nameof(TravelLookBuff.OnMouseUpAsButton))]
+        [HarmonyPrefix]
+        public static bool PreOnMouseUpAsButton(TravelLookBuff __instance)
+        {
+            var result = Utils.IsMultiLevelBuff(__instance.buffType, __instance.buffIndex);
+            bool reset = false;
+            if (result.Item1)
+            {
+                try
+                {
+                    var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+                    if (array is null)
+                        return true;
+                    int index = result.Item2;
+                    var list = CustomCore.CustomBuffsLevel.Where(kvp => kvp.Key.Item1 == __instance.buffType && kvp.Key.Item2 == __instance.buffIndex).ToList();
+                    int maxLevel = 1;
+                    if (list.Count > 0)
+                        maxLevel = list[0].Value.Item2;
+                    if (TravelLookMenu.Instance.showAll)
+                    {
+                        array[index] = array[index] + 1;
+                        if (array[index] > maxLevel)
+                        {
+                            array[index] = 0;
+                        }
+                        if (array[index] == 0)
+                        {
+                            switch (__instance.buffType)
+                            {
+                                case BuffType.AdvancedBuff:
+                                    TravelMgr.Instance.advancedUpgrades[__instance.buffIndex] = false;
+                                    break;
+                                case BuffType.UltimateBuff:
+                                    TravelMgr.Instance.ultimateUpgrades[__instance.buffIndex] = 0;
+                                    break;
+                                case BuffType.Debuff:
+                                    TravelMgr.Instance.debuff[__instance.buffIndex] = false;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (__instance.buffType)
+                            {
+                                case BuffType.AdvancedBuff:
+                                    TravelMgr.Instance.advancedUpgrades[__instance.buffIndex] = true;
+                                    break;
+                                case BuffType.UltimateBuff:
+                                    TravelMgr.Instance.ultimateUpgrades[__instance.buffIndex] = array[index];
+                                    break;
+                                case BuffType.Debuff:
+                                    TravelMgr.Instance.debuff[__instance.buffIndex] = true;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        __instance.SetText(array[index] != 0, array[index]);
+                        if (array[index] <= maxLevel &&
+                            array[index] != 0)
+                        {
+                            if (maxLevel > 1)
+                                __instance.SetText($"已开启（{array[index]}级）");
+                            else
+                                __instance.SetText($"已开启");
+                        }
+                        TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+                        return false;
+                    }
+                    else
+                    {
+                        if (array[index] < maxLevel && Lawnf.TravelAdvanced(54) && maxLevel != 1)
+                        {
+                            array[index] = array[index] + 1;
+                            reset = true;
+                            if (array[index] >= maxLevel)
+                                __instance.SetText("已满级");
+                            else
+                                __instance.SetText($"{array[index]}级");
+                        }
+                        if (array[index] >= maxLevel)
+                        {
+                            __instance.SetText("已满级");
+                        }
+                        TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    CustomCore.CLogger.LogInfo("Can't get data");
+                }
+            }
+            if (reset)
+            {
+                __instance.manager.advancedUpgrades[54] = false;
+                return false;
+            }
+            return true;
+        }
 #if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
         #region 多级词条升级
         /// <summary>
@@ -1603,6 +1962,23 @@ namespace CustomizeLib.BepInEx
             {
                 TravelMgr.allStrongUltimtePlant.Add(plantType);
             }
+        }
+
+        [HarmonyPatch(nameof(TravelMgr.Start))]
+        [HarmonyPostfix]
+        public static void PostStart(TravelMgr __instance)
+        {
+            if (__instance.GetData("CustomBuffsLevel") is null)
+            {
+                __instance.SetData("CustomBuffsLevel", new int[CustomCore.CustomBuffsLevel.Count]);
+            }
+            if (__instance.GetData("LoadByEndless") is null)
+                __instance.SetData("LoadByEndless", false);
+            if (!__instance.GetData<bool>("LoadByEndless"))
+            {
+                __instance.SetData("CustomBuffsLevel", new int[CustomCore.CustomBuffsLevel.Count]);
+            }
+            TravelMgr.Instance.SetData("LoadByEndless", false); // 重置标志位，避免进入其他模式后不重置
         }
 
         [HarmonyPatch("GetAdvancedBuffPool")]
@@ -2393,7 +2769,7 @@ namespace CustomizeLib.BepInEx
         {
             var levels = GameAPP.canvas.GetChild(0).FindChild("Levels");
             var firstBtns = levels.FindChild("FirstBtns");
-            if (firstBtns.FindChild("CustomLevels") is null || firstBtns.FindChild("CustomLevels").IsDestroyed())
+            if (firstBtns.FindChild("CustomLevels") == null || firstBtns.FindChild("CustomLevels").IsDestroyed())
             {
                 GameObject custom = UnityEngine.Object.Instantiate(firstBtns.GetChild(0).gameObject, firstBtns);
                 custom.name = "CustomLevels";
@@ -2444,9 +2820,9 @@ namespace CustomizeLib.BepInEx
 
         [HarmonyPatch(nameof(UIMgr.EnterGame))]
         [HarmonyPrefix]
-        public static bool PreEnterGame(ref int levelType, ref int levelNumber, ref int id, ref string name)
+        public static bool PreEnterGame(ref LevelType levelType, ref int levelNumber, ref int id, ref string name)
         {
-            if (levelType is not 66) return true;
+            if ((int)levelType is not 66) return true;
             var levelData = CustomCore.CustomLevels[levelNumber];
 
             // 清理UI资源
@@ -2517,6 +2893,145 @@ namespace CustomizeLib.BepInEx
             {
                 ZombieDataManager.zombieDataDic[z.Key] = z.Value.Item3;
             }
+        }
+    }
+
+    /// <summary>
+    /// 子弹移动路径
+    /// </summary>
+    [HarmonyPatch(typeof(Bullet))]
+    public static class BulletPatch
+    {
+        [HarmonyPatch(nameof(Bullet.PostionUpdate))]
+        [HarmonyPrefix]
+        public static bool PostionUpdate(Bullet __instance)
+        {
+            if (CustomCore.CustomBulletMovingWay.ContainsKey(__instance.theMovingWay))
+            {
+                CustomCore.CustomBulletMovingWay[__instance.theMovingWay](__instance);
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(SaveInfo))]
+    public static class SaveInfoPatch
+    {
+        [HarmonyPatch(nameof(SaveInfo.SaveSurvivalData), new Type[] { typeof(int), typeof(bool), typeof(int) })]
+        [HarmonyPostfix]
+        public static void PostSaveSurvivalData_1(SaveInfo __instance, ref int level, ref int id)
+        {
+            if (TravelMgr.Instance == null)
+                return;
+            var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+            if (array is null)
+            {
+                array = new int[CustomCore.CustomBuffsLevel.Count];
+                TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+                return;
+            }
+            if (array == new int[CustomCore.CustomBuffsLevel.Count])
+                return;
+            String json = JsonSerializer.Serialize(array);
+            String originalPath = __instance.GetPath(level, id);
+            String? directoryPath = Path.GetDirectoryName(originalPath);
+            if (directoryPath is null)
+                return;
+            String fileName = Path.GetFileName(originalPath);
+            String filePath = Path.Combine(directoryPath, $"{fileName}.extra.json");
+            if (!Directory.Exists(directoryPath))
+                Directory.CreateDirectory(directoryPath);
+            File.WriteAllText(filePath, json);
+        }
+
+        [HarmonyPatch(nameof(SaveInfo.SaveSurvivalData), new Type[] { typeof(SurvivalData), typeof(int), typeof(int) })]
+        [HarmonyPostfix]
+        public static void PostSaveSurvivalData_2(SaveInfo __instance, ref int level, ref int id)
+        {
+            if (TravelMgr.Instance == null)
+                return;
+            var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+            if (array is null)
+            {
+                array = new int[CustomCore.CustomBuffsLevel.Count];
+                TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+                return;
+            }
+            if (array.SequenceEqual(new int[CustomCore.CustomBuffsLevel.Count]))
+                return;
+            String json = JsonSerializer.Serialize(array);
+            String originalPath = __instance.GetPath(level, id);
+            String? directoryPath = Path.GetDirectoryName(originalPath);
+            if (directoryPath is null)
+                return;
+            String fileName = Path.GetFileName(originalPath);
+            String filePath = Path.Combine(directoryPath, $"{fileName}.extra.json");
+            if (!Directory.Exists(directoryPath))
+                Directory.CreateDirectory(directoryPath);
+            File.WriteAllText(filePath, json);
+        }
+    }
+
+    [HarmonyPatch(typeof(SaveMgr))]
+    public static class SaveMgrPatch
+    {
+        [HarmonyPatch(nameof(SaveMgr.LoadBoard))]
+        [HarmonyPostfix]
+        public static void PostLoadBoard(SaveMgr __instance, ref int level)
+        {
+            if (TravelMgr.Instance == null || SaveInfo.Instance == null)
+                return;
+            var idGet = SaveInfo.Instance.GetData("endlessID");
+            if (idGet is null)
+                return;
+            var id = (int)idGet;
+            String originalPath = SaveInfo.Instance.GetPath(level, id);
+            String? directoryPath = Path.GetDirectoryName(originalPath);
+            if (directoryPath is null)
+                return;
+            String fileName = Path.GetFileName(originalPath);
+            String filePath = Path.Combine(directoryPath, $"{fileName}.extra.json");
+            if (!File.Exists(filePath))
+                return;
+            String text = File.ReadAllText(filePath);
+            int[]? array = JsonSerializer.Deserialize<int[]>(text);
+            if (array is null)
+                return;
+            TravelMgr.Instance.SetData("CustomBuffsLevel", array);
+            TravelMgr.Instance.SetData("LoadByEndless", true);
+            SaveInfo.Instance.SetData("endlessID", null);
+        }
+    }
+
+
+    [HarmonyPatch(typeof(TreasureData))]
+    public static class TreasureDataPatch
+    {
+        [HarmonyPatch(nameof(TreasureData.GetCardLevel))]
+        [HarmonyPrefix]
+        public static bool GetCardLevel(TreasureData __instance, ref PlantType thePlantType, ref CardLevel __result)
+        {
+            if (CustomCore.TypeMgrExtra.LevelPlants.ContainsKey(thePlantType))
+            {
+                __result = CustomCore.TypeMgrExtra.LevelPlants[thePlantType];
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(UIMgr))]
+    public static class UIMgrPatch_0
+    {
+        [HarmonyPatch(nameof(UIMgr.EnterGame))]
+        [HarmonyPrefix]
+        public static void PreEnterGame(UIMgr __instance, ref int levelNumber, ref int id, ref LevelType levelType)
+        {
+            if (SaveInfo.Instance == null)
+                return;
+            if (!Lawnf.IsTravelLevel(levelType, levelNumber))
+                return;
+            SaveInfo.Instance.SetData("endlessID", id);
         }
     }
 }
