@@ -111,7 +111,7 @@ namespace MagicZombie.BepInEx
         [HarmonyPrefix]
         public static bool Prefix(ref int theRow, ref ZombieType theZombieType, ref float theX, ref bool isIdle)
         {
-            if (UnityEngine.Random.Range(0, 100) <= 20 && theZombieType == ZombieType.NormalZombie && GameAPP.theGameStatus == GameStatus.InGame)
+            if (UnityEngine.Random.Range(0, 100) <= 20 && theZombieType == ZombieType.RandomZombie && GameAPP.theGameStatus == GameStatus.InGame)
             {
                 CreateZombie.Instance.SetZombie(theRow, (ZombieType)MagicZombie.ZombieID, theX, isIdle);
                 return false;

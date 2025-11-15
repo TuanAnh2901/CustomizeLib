@@ -148,7 +148,7 @@ namespace CrazySqualour
 
                 foreach (Plant plant in nearPlant)
                 {
-                    if (plant != null && plant.thePlantType == PlantType.EndoFlame)
+                    if (plant != null && plant.thePlantType == PlantType.EndoFlame || plant.thePlantType == PlantType.ZombieEndoFlame)
                     {
                         Plant endoFlame = plant;
                         bool success = __instance.TryGetComponent<EndoFlameSaver>(out var component);
@@ -160,7 +160,7 @@ namespace CrazySqualour
                             __instance.isJump = true;
 
                             // 确定攻击方向（左/右）
-                            __instance.anim.SetTrigger("lookleft"); // 向右看
+                            __instance.anim.SetTrigger("lookleft");
 
                             // 设置父级对象（跟随棋盘）
                             __instance.transform.SetParent(__instance.board.transform);
@@ -182,14 +182,6 @@ namespace CrazySqualour
                             {
                                 boxCol.enabled = false;
                             }
-
-                            // 处理鼠标交互
-                            if (__instance.mouseCollider != null && __instance.mouseCollider == __instance)
-                            {
-                                __instance.mouseCollider = null;
-                                __instance.isLily = false;
-                                UnityEngine.Object.Destroy(__instance.mouseCollider.gameObject);
-                            }
                         }
                         return false;
                     }
@@ -207,7 +199,7 @@ namespace CrazySqualour
                 bool findEndoFlame = false;
                 Plant endoFlame = null;
                 foreach (Plant plant in Lawnf.Get1x1Plants(__instance.thePlantColumn + 1, __instance.thePlantRow).ToArray().ToList())
-                    if (plant.thePlantType == PlantType.EndoFlame)
+                    if (plant.thePlantType == PlantType.EndoFlame || plant.thePlantType == PlantType.ZombieEndoFlame)
                     {
                         findEndoFlame = true;
                         endoFlame = plant;

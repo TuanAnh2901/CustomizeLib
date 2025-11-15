@@ -6,8 +6,11 @@ using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
+using System.Reflection;
 using Unity.VisualScripting;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
+using static UnityEngine.GraphicsBuffer;
 
 namespace CustomizeLib.MelonLoader
 {
@@ -62,6 +65,29 @@ namespace CustomizeLib.MelonLoader
         public PlantDataLoader.PlantData_? PlantData { get; set; }
         public GameObject Prefab { get; set; }
         public GameObject Preview { get; set; }
+    }
+
+    public struct CustomBulletData
+    {
+        public BulletType ID { get; set; }
+        public GameObject Prefab { get; set; }
+    }
+
+    public struct CustomPlantSaveData
+    {
+        public CustomPlantSaveData() { }
+
+        public int thePlantColumn = -1;
+        public int thePlantRow = -1;
+        public int thePlantType = -1;
+        public List<CustomPlantEndlessData> data { get; set; } = [];
+    }
+
+    public struct CustomPlantEndlessData
+    {
+        public CustomPlantEndlessData() { }
+        public String Name { get; set; } = "Name";
+        public object? Value { get; set; } = null;
     }
 
     /// <summary>
@@ -171,7 +197,6 @@ namespace CustomizeLib.MelonLoader
             }
         }
 
-        //递归，找shoot，但是一些奇怪的植物不行
         public static void FindShoot(this Plant plant, Transform parent)
         {
             String name = parent.name.ToLower();
@@ -205,6 +230,19 @@ namespace CustomizeLib.MelonLoader
             }
 
             throw new ArgumentException($"Could not find {name} from {ab.name}");
+        }
+
+        /// <summary>
+        /// 获取ab包里所有的资源的名字
+        /// </summary>
+        /// <param name="ab">ab包对象</param>
+        /// <returns></returns>
+        public static String[] GetAssetsNames(this AssetBundle ab)
+        {
+            List<String> list = new();
+            foreach (var ase in ab.LoadAllAssetsAsync().allAssets)
+                list.Add(ase.name);
+            return list.ToArray();
         }
 
         public static T GetRandomItem<T>(this IList<T> list) => list[UnityEngine.Random.RandomRangeInt(0, list.Count)];

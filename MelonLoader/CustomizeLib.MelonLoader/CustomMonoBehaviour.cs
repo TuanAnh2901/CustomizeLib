@@ -4,6 +4,7 @@ using HarmonyLib;
 using Il2Cpp;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using Random = System.Random;
 
 namespace CustomizeLib.MelonLoader;
@@ -210,3 +211,55 @@ public class CheckCardState : MonoBehaviour
         }
     }
 }
+
+/*[RegisterTypeInIl2Cpp]
+public class CustomMouseBehaviour : MonoBehaviour
+{
+    public void Update()
+    {
+        if (!Input.GetMouseButton(0))
+            return;
+        if (Mouse.Instance == null)
+            return;
+        MelonLogger.Msg("call");
+        if (Mouse.Instance.theItemOnMouse == null || Mouse.Instance.mouseItemType != MouseItemType.Plant_preview)
+            return;
+        MelonLogger.Msg("call1");
+        MelonLogger.Msg(Mouse.Instance.mouseItemType);
+        MelonLogger.Msg(Mouse.Instance.theItemOnMouse.GetComponent<Plant>() == null);
+        if (!Mouse.Instance.theItemOnMouse.TryGetComponent<Plant>(out var plant))
+        {
+            return;
+        }
+        MelonLogger.Msg("call2");
+        if (plant == null)
+            return;
+        MelonLogger.Msg("call3");
+        var list = Lawnf.Get1x1Plants(Mouse.Instance.theMouseColumn, Mouse.Instance.theMouseRow).ToArray().ToList();
+        if (list.Count <= 0)
+            return;
+        MelonLogger.Msg("call5");
+        bool found = false;
+        bool clear = true;
+        var array = MixData.data.Cast<Il2CppSystem.Array>();
+        foreach (var item in list)
+        {
+            if (item == null)
+                continue;
+            if (item == plant)
+                continue;
+            MelonLogger.Msg("call6");
+            if (CustomCore.CustomClickCardOnPlantEvents.ContainsKey((item.thePlantType, plant.thePlantType)))
+            {
+                foreach (var action in CustomCore.CustomClickCardOnPlantEvents[(plant.thePlantType, item.thePlantType)])
+                    action(item);
+                found = true;
+                if ((PlantType)(array.GetValue((int)item.thePlantType, (int)plant.thePlantType).Unbox<int>()) != PlantType.Nothing)
+                    clear = false;
+            }
+        }
+        if (found && clear)
+            Mouse.Instance.ClearItemOnMouse(true);
+        MelonLogger.Msg("call7");
+    }
+}*/

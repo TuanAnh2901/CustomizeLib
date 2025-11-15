@@ -1,34 +1,31 @@
-﻿using CustomizeLib.MelonLoader;
-using HarmonyLib;
-using Il2Cpp;
+﻿using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using MelonLoader;
-using System.Reflection;
-using Unity.Collections;
-using Unity.VisualScripting;
+using BepInEx;
 using UnityEngine;
-using static MelonLoader.MelonLogger;
+using BepInEx.Unity.IL2CPP;
+using System.Reflection;
+using CustomizeLib.BepInEx;
 
-[assembly: MelonInfo(typeof(UltimateDoomMinigun.MelonLoader.Core), "UltimateDoomMinigun", "1.0.0", "Salmon", null)]
-[assembly: MelonGame("LanPiaoPiao", "PlantsVsZombiesRH")]
-
-namespace UltimateDoomMinigun.MelonLoader
+namespace UltimateDoomMinigun.BepInEx
 {
-    public class Core : MelonMod
+    [BepInPlugin("salmon.ultimatedoomminigun", "UltimateDoomMinigun", "1.0")]
+    public class Core : BasePlugin
     {
-        public override void OnInitializeMelon()
+        public override void Load()
         {
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
+            ClassInjector.RegisterTypeInIl2Cpp<UltimateDoomMinigun>();
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            var ab = CustomCore.GetAssetBundle(MelonAssembly.Assembly, "ultimatedoomminigun");
+            var ab = CustomCore.GetAssetBundle(Assembly.GetExecutingAssembly(), "ultimatedoomminigun");
             CustomCore.RegisterCustomPlant<UltimateMinigun, UltimateDoomMinigun>(UltimateDoomMinigun.PlantID, ab.GetAsset<GameObject>("UltimateDoomMinigunPrefab"),
-                ab.GetAsset<GameObject>("UltimateDoomMinigunPreview"), [], 0.5f, 0f, 300, 300, 90f, 1000);
+                ab.GetAsset<GameObject>("UltimateDoomMinigunPreview"), new List<(int, int)> { }, 0.5f, 0f, 300, 300, 90f, 1000);
             CustomCore.AddPlantAlmanacStrings(UltimateDoomMinigun.PlantID, $"究级速射毁灭机枪射手({UltimateDoomMinigun.PlantID})",
                 "发射毁灭子弹的加特林速射机枪\n" +
                 "<color=#0000FF>毁灭菇机枪射手的限定形态</color>\n\n" +
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
                 "<color=#3D1400>使用条件：</color><color=red>①融合或转化毁灭机枪射手时有2%概率变异\n" +
                 "②神秘模式\n" +
-                "*可使用豌豆射手切回毁灭机枪射手</color>\n" + 
+                "*可使用豌豆射手切回毁灭机枪射手</color>\n" +
                 "<color=#3D1400>伤害：</color><color=red>300x6/0.5秒，1800</color>\n" +
                 "<color=#3D1400>特点：</color><color=red>①每次发射有5%概率改为大毁灭菇子弹，每第16发必改为大毁灭菇子弹，大毁灭菇伤害1800，半径3格无衰减溅射。\n" +
                 "②启动射击需要预热1.5秒。</color>\n\n" +
@@ -39,7 +36,6 @@ namespace UltimateDoomMinigun.MelonLoader
         }
     }
 
-    [RegisterTypeInIl2Cpp]
     public class UltimateDoomMinigun : MonoBehaviour
     {
         public static int PlantID = 1933;

@@ -62,48 +62,60 @@ public class UltimateWinterMelon : MonoBehaviour
 
     public void Update() //每帧执行（不受deltaTime影响）
     {
-        if (plant != null) //空值判断
-            plant.thePlantAttackInterval = 2f;
-        UpdateText(); //更新血条
-        // rotateCountdown -= Time.fixedUnscaledDeltaTime; // 旋转间隔减少不受timeScale影响的deltaTime
-        if (Tground != null)
-        {
-            // 每秒旋转90度，按帧时间缩放
-            Tground.transform.Rotate(0, 0, -90f * Time.deltaTime);
-        }
-        if (GameAPP.theGameStatus == GameStatus.Almanac && Tground != null && Time.timeScale == 0) // 如果黑洞不为空且当前游戏为图鉴状态且时间速率为0
-        {
-            Tground.transform.Rotate(0, 0, -90f * Time.unscaledDeltaTime);
-        }
-        if (plant != null && plant.healthSlider != null && plant.healthSlider.healthText != null && plant.healthSlider.healthTextShadow != null)
-        {
-            superShootText.gameObject.SetActive(plant.healthSlider.gameObject.active);
-            superShootTextShadow.gameObject.SetActive(plant.healthSlider.gameObject.active);
-        }
         try
         {
-            if (AlmanacMenu.Instance.currentShowCtrl.localShowPlant.name == this.plant.gameObject.name)
+            if (plant != null) //空值判断
+                plant.thePlantAttackInterval = 2f;
+            if (plant.healthSlider != null)
+                UpdateText(); //更新血条
+                              // rotateCountdown -= Time.fixedUnscaledDeltaTime; // 旋转间隔减少不受timeScale影响的deltaTime
+            if (Tground != null)
             {
-                superShootText.gameObject.SetActive(false);
-                superShootTextShadow.gameObject.SetActive(false);
+                // 每秒旋转90度，按帧时间缩放
+                Tground.transform.Rotate(0, 0, -90f * Time.deltaTime);
+            }
+            if (GameAPP.theGameStatus == GameStatus.Almanac && Tground != null && Time.timeScale == 0) // 如果黑洞不为空且当前游戏为图鉴状态且时间速率为0
+            {
+                Tground.transform.Rotate(0, 0, -90f * Time.unscaledDeltaTime);
+            }
+            if (plant != null && plant.healthSlider != null && plant.healthSlider.healthText != null && plant.healthSlider.healthTextShadow != null)
+            {
+                superShootText.gameObject.SetActive(plant.healthSlider.gameObject.active);
+                superShootTextShadow.gameObject.SetActive(plant.healthSlider.gameObject.active);
+            }
+            try
+            {
+                if (AlmanacMenu.Instance.currentShowCtrl.localShowPlant.name == this.plant.gameObject.name)
+                {
+                    superShootText.gameObject.SetActive(false);
+                    superShootTextShadow.gameObject.SetActive(false);
+                }
+            }
+            catch (Exception)
+            {
             }
         }
         catch (Exception)
         {
+
         }
     }
 
-    public void Awake()
+    public void Start()
     {
         plant.shoot = plant.gameObject.transform.GetChild(0);
-        plant.textHead = plant.gameObject.transform.GetChild(1).gameObject;
-        InitText();
         Tground = plant.gameObject.transform.FindChild("body").FindChild("Tground").gameObject;
+        if (plant.healthSlider == null)
+            return;
+        plant.healthSlider.textHead = plant.gameObject.transform.GetChild(1);
+        InitText();
     }
 
     public void InitText()
     {
-        Transform textHead = plant.textHead.transform;
+        if (plant.healthSlider == null)
+            return;
+        Transform textHead = plant.healthSlider.textHead;
         textHead.position = new Vector3(textHead.position.x, textHead.position.y + 0.3f, 0f);
         if (superShootText == null)
             superShootText = plant.SetPlantText("大招概率", Color.cyan, new Vector2(0f, -0.4f), textHead, $"大招概率:{superShoot}%", 20);

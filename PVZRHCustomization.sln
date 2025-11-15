@@ -191,6 +191,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickJacsonDriver.MelonLoad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltimateDoomMinigun.MelonLoader", "MelonLoader\UltimateDoomMinigun.MelonLoader\UltimateDoomMinigun.MelonLoader.csproj", "{6A7A0C4F-AF41-475C-9917-A5E477BA75B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltimateDoomMinigun.BepInEx", "BepInEx\UltimateDoomMinigun.BepInEx\UltimateDoomMinigun.BepInEx.csproj", "{87F4F1A3-97CB-4C23-978A-9B308784B22F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltimateCornNut.MelonLoader", "MelonLoader\UltimateCornNut.MelonLoader\UltimateCornNut.MelonLoader.csproj", "{8D16E631-5698-47EE-8C73-2AF67CBE2AFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltimateCornNut.BepInEx", "BepInEx\UltimateCornNut.BepInEx\UltimateCornNut.BepInEx.csproj", "{C8589747-D650-4581-A2B7-5A6FBCE2B423}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IceDoomGatling", "..\IceDoomGatling\IceDoomGatling\IceDoomGatling.csproj", "{F65885CA-0943-C9EE-6960-55E20F05BD72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -557,6 +565,22 @@ Global
 		{6A7A0C4F-AF41-475C-9917-A5E477BA75B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A7A0C4F-AF41-475C-9917-A5E477BA75B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A7A0C4F-AF41-475C-9917-A5E477BA75B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87F4F1A3-97CB-4C23-978A-9B308784B22F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87F4F1A3-97CB-4C23-978A-9B308784B22F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87F4F1A3-97CB-4C23-978A-9B308784B22F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87F4F1A3-97CB-4C23-978A-9B308784B22F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D16E631-5698-47EE-8C73-2AF67CBE2AFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D16E631-5698-47EE-8C73-2AF67CBE2AFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D16E631-5698-47EE-8C73-2AF67CBE2AFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D16E631-5698-47EE-8C73-2AF67CBE2AFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8589747-D650-4581-A2B7-5A6FBCE2B423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8589747-D650-4581-A2B7-5A6FBCE2B423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8589747-D650-4581-A2B7-5A6FBCE2B423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8589747-D650-4581-A2B7-5A6FBCE2B423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F65885CA-0943-C9EE-6960-55E20F05BD72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F65885CA-0943-C9EE-6960-55E20F05BD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F65885CA-0943-C9EE-6960-55E20F05BD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F65885CA-0943-C9EE-6960-55E20F05BD72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

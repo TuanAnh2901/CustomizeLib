@@ -88,12 +88,13 @@ namespace UltimateSpikeTorch
                 }
                 newBullet.torchWood = plant;
                 newBullet.theExistTime = bullet.theExistTime;
+                UnityEngine.Object.Destroy(newBullet.rb);
+                newBullet.rb = newBullet.AddComponent<Rigidbody2D>();
                 newBullet.rb.velocity = bullet.rb.velocity;
                 newBullet.normalSpeed = bullet.normalSpeed;
                 newBullet.transform.rotation = bullet.transform.rotation;
                 newBullet.rogueStatus = bullet.rogueStatus;
                 newBullet.theStatus = bullet.theStatus;
-
                 if (newBullet.normalSpeed == 0)
                     newBullet.normalSpeed = 6f;
                 fireTimes++;

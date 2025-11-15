@@ -1,6 +1,7 @@
 ﻿// #define DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF // 启用多级词条
 
 using CustomizeLib.MelonLoader;
+using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 using System.Diagnostics.CodeAnalysis;
@@ -43,6 +44,7 @@ namespace CustomizeLib.MelonLoader
             public static List<PlantType> IsTangkelp { get; set; } = [];
             public static List<PlantType> IsWaterPlant { get; set; } = [];
             public static List<PlantType> UmbrellaPlants { get; set; } = [];
+            public static List<PlantType> UncrashablePlants { get; set; } = [];
             public static Dictionary<PlantType, CardLevel> LevelPlants { get; set; } = [];
         }
 
@@ -327,6 +329,9 @@ namespace CustomizeLib.MelonLoader
             }
         }
 
+        [Obsolete]
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string? color = null, PlantType plantType = PlantType.Nothing) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, TravelBuffOptionButton.BgType.Day);
         /// <summary>
         /// 注册自定义子弹
         /// </summary>
@@ -363,6 +368,37 @@ namespace CustomizeLib.MelonLoader
             else
                 MelonLogger.Error($"Duplicate Bullet ID: {id}");
         }
+
+        /*public static void RegisterCustomBulletSkin(GameObject prefab, PlantType plantType, BulletType bulletType)
+        {
+            CustomBulletData customBulletData = new() { ID = bulletType, Prefab = prefab };
+
+            if (GameAPP.resourcesManager == null)
+            {
+                CustomBulletsSkinTemp.Add((prefab, plantType, bulletType));
+                return;
+            }
+            GameObject oldPrefab = GameAPP.resourcesManager.bulletPrefabs[bulletType];
+            var components = oldPrefab.GetComponents<Component>();
+            // 复制旧预制体上的组件
+            foreach (var component in components)
+            {
+                if (!prefab.TryGetComponent(component.GetIl2CppType(), out var comp) && comp == null)
+                    prefab.AddComponent(component.GetIl2CppType());
+            }
+            prefab.GetComponent<Bullet>().theBulletType = bulletType;
+
+            if (CustomBulletsSkin.ContainsKey(plantType))
+                CustomBulletsSkin[plantType].Add(customBulletData);
+            else
+                CustomBulletsSkin.Add(plantType, new List<CustomBulletData>() { 
+                    new CustomBulletData
+                    {
+                        ID = bulletType,
+                        Prefab = GameAPP.resourcesManager.bulletPrefabs[bulletType]
+                    }, 
+                    customBulletData });
+        }*/
 
         public static int RegisterCustomLevel(CustomLevelData ldata)
         {
@@ -924,16 +960,50 @@ namespace CustomizeLib.MelonLoader
         /// </summary>
         /// <param name="id">移动方式id</param>
         /// <param name="action">移动逻辑</param>
-        public static void RegisterCustomBulletMovingWay(int id, Action<Bullet> action) => CustomBulletMovingWay.Add(id, action);
+        public static void RegisterCustomBulletMovingWay(int id, [NotNull] Action<Bullet> action) => CustomBulletMovingWay.Add(id, action);
 
-        public static void RegisterCustomEndlessSave(Func<Plant, bool> objectFunc, Func<MemberInfo, bool> memberFunc) =>
-            CustomEndlessSave.Add(objectFunc, memberFunc);
+        public static void RegisterCustomEndlessSave(Type type, List<String> name) =>
+            CustomEndlessSave.Add(type, name);
+
+        /// <summary>
+        /// 注册自定义植物点击在另一植物上事件
+        /// </summary>
+        /// <param name="plantType">底层植物（原有）</param>
+        /// <param name="cardType">卡槽植物（点击上去的）</param>
+        /// <param name="action">执行的事件</param>
+        public static void RegisterCustomClickCardOnPlantEvent([NotNull] PlantType plantType, [NotNull] PlantType cardType, [NotNull] Action<Plant> action)
+        {
+            if (CustomClickCardOnPlantEvents.ContainsKey((plantType, cardType)))
+                CustomClickCardOnPlantEvents[(plantType, cardType)].Add(action);
+            else
+                CustomClickCardOnPlantEvents.Add((plantType, cardType), new() { action });
+        }
+
+        /// <summary>
+        /// 注册自定义植物点击在另一植物上事件
+        /// </summary>
+        /// <param name="plantType">底层植物（原有）</param>
+        /// <param name="cardType">卡槽植物（点击上去的）</param>
+        /// <param name="actions">执行的事件列表</param>
+        public static void RegisterCustomClickCardOnPlantEvent([NotNull] PlantType plantType, [NotNull] PlantType cardType, [NotNull] List<Action<Plant>> actions)
+        {
+            if (CustomClickCardOnPlantEvents.ContainsKey((plantType, cardType)))
+                foreach (var action in actions)
+                    CustomClickCardOnPlantEvents[(plantType, cardType)].Add(action);
+            else
+                CustomClickCardOnPlantEvents.Add((plantType, cardType), actions);
+        }
 
         public override void OnLateInitializeMelon()
         {
             GameObject ccore = new("CustomizeLib by Infinite75");
             ccore.AddComponent<CustomizeLib>().CustomCore = this;
             UnityEngine.Object.DontDestroyOnLoad(ccore);
+
+            RegisterCustomClickCardOnPlantEvent(PlantType.SunFlower, PlantType.Cornpult, (p) =>
+            {
+                MelonLogger.Msg(p.thePlantType);
+            });
         }
 
         /// <summary>
@@ -981,6 +1051,12 @@ namespace CustomizeLib.MelonLoader
         /// </summary>
         public static Dictionary<PlantType, CustomPlantData> CustomPlantsSkin { get; set; } = [];
 
+        /*
+        /// <summary>
+        /// 自定义子弹皮肤列表
+        /// </summary>
+        public static Dictionary<PlantType, List<CustomBulletData>> CustomBulletsSkin { get; set; } = [];
+        */
         /// <summary>
         /// 自定义皮肤是否激活
         /// </summary>
@@ -1095,11 +1171,21 @@ namespace CustomizeLib.MelonLoader
         /// </summary>
         public static Dictionary<(BuffType, int), TravelBuffOptionButton.BgType> CustomBuffsBg { get; set; } = [];
 
-        public static Dictionary<Func<Plant, bool>, Func<MemberInfo, bool>> CustomEndlessSave { get; set; } = [];
+        public static Dictionary<Type, List<String>> CustomEndlessSave { get; set; } = [];
 
         /// <summary>
-        /// 存卡片检查的列表，用于管理Packet显示，你不应该使用它
+        /// 自定义种植植物在另一植物上事件（当前位置的植物的类型，鼠标上的植物类型），Action参数：当前位置的植物
+        /// </summary>
+        public static Dictionary<(PlantType, PlantType), List<Action<Plant>>> CustomClickCardOnPlantEvents { get; set; } = [];
+
+        /// <summary>
+        /// 存卡片检查的列表，用于管理Packet显示
         /// </summary>
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
+
+        /*/// <summary>
+        /// 注册时缓存皮肤，加载时注册
+        /// </summary>
+        public static List<(GameObject, PlantType, BulletType)> CustomBulletsSkinTemp { get; set; } = [];*/
     }
 }

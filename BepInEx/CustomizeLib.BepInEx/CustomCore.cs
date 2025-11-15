@@ -57,6 +57,7 @@ namespace CustomizeLib.BepInEx
             public static List<PlantType> UmbrellaPlants { get; set; } = [];
             public static List<ZombieType> UselessHypnoZombie { get; set; } = [];
             public static List<ZombieType> WaterZombie { get; set; } = [];
+            public static List<PlantType> UncrashablePlants { get; set; } = [];
             public static Dictionary<PlantType, CardLevel> LevelPlants { get; set; } = [];
         }
 
@@ -350,6 +351,10 @@ namespace CustomizeLib.BepInEx
                     return -1;
             }
         }
+
+        [Obsolete]
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string? color = null, PlantType plantType = PlantType.Nothing) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, TravelBuffOptionButton.BgType.Day);
 
         /// <summary>
         /// 注册自定义子弹

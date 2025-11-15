@@ -147,12 +147,12 @@ namespace UltimateMachineChomper.BepInEx
         public void InitText()
         {
             if (plant == null) return;
-            if (plant.textHead == null && GameAPP.theGameStatus == GameStatus.InGame) plant.textHead = plant.gameObject.transform.FindChild("textHead").gameObject;
+            if (plant.healthSlider.textHead == null && GameAPP.theGameStatus == GameStatus.InGame) plant.healthSlider.textHead = plant.gameObject.transform.FindChild("textHead");
             if (extraText == null)
             {
                 GameObject extraTextGO = new GameObject("ExtraText");
                 extraText = extraTextGO.AddComponent<TextMeshPro>();
-                extraTextGO.transform.SetParent(plant.textHead.transform);
+                extraTextGO.transform.SetParent(plant.healthSlider.textHead.transform);
                 extraTextGO.transform.localPosition = new Vector3(0f, -0.5f, 0);
                 extraText.font = GameAPP.font;
                 String status = "";
@@ -176,7 +176,7 @@ namespace UltimateMachineChomper.BepInEx
             {
                 GameObject extraTextShadowGO = new GameObject("ExtraTextShadow");
                 extraTextShadow = extraTextShadowGO.AddComponent<TextMeshPro>();
-                extraTextShadowGO.transform.SetParent(plant.textHead.transform);
+                extraTextShadowGO.transform.SetParent(plant.healthSlider.textHead.transform);
                 extraTextShadowGO.transform.localPosition = new Vector3(0.01f, -0.51f, 0);
                 extraTextShadow.font = GameAPP.font;
                 extraTextShadow.text = extraText.text;
