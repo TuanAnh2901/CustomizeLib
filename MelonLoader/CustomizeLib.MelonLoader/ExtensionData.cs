@@ -39,6 +39,8 @@ namespace CustomizeLib.MelonLoader
                 return default;
             try
             {
+                if (component.gameObject.GetData(name) == null)
+                    return default;
                 return (T)component.gameObject.GetData(name);
             }
             catch (Exception e)

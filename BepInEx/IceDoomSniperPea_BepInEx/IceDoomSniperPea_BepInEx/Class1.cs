@@ -50,12 +50,12 @@ namespace IceDoomSniperPea.BepInEx
                 "②每轮发射中第1发安装冰毁炸弹，第2发命中拥有冰毁炸弹的僵尸会将其引爆，造成伤害为1800点的寒冰爆炸效果，若未引爆，3秒种后自动引爆并造成600点伤害\n" +
                 "③每11发安装超级冰毁炸弹，第12发引爆射击造成超级爆头造成21亿伤害（对于领袖将造成10000点伤害），随后释放7200点的寒冰毁灭菇爆炸\n" +
                 "<color=#3D1400>融合配方：</color><color=red>狙击射手+寒冰菇+毁灭菇</color>\n" +
-                "<color=#3D1400>词条1：</color><color=red>精装炸弹：冰毁炸弹爆炸的伤害x3，冰毁炸弹引爆后会为附近的僵尸挂上冰毁炸弹。2级时，每次引爆都造成寒冰毁灭菇爆炸，引爆时有50%概率触发超级爆头</color>\n" +
+                "<color=#3D1400>词条1：</color><color=red>精装炸弹：冰毁炸弹爆炸的伤害x3，冰毁炸弹引爆后会为附近的僵尸挂上冰毁炸弹。2级时，每次引爆都造成寒冰毁灭菇爆炸，引爆时有50%概率触发超级爆头，并附带10%韧性的伤害</color>\n" +
                 "<color=#3D1400>词条2：</color><color=red>夜影暗袭：冰毁狙击射手每11发将锁定场上韧性上限最高的僵尸。每轮攻击有概率触发连狙\n\n" +
                 "<color=#3D1400>远方的僵尸缓缓逼近，声势浩大，所过之处寸草不生，乌鸦吱吱哇哇的叫着，像是在宣告僵尸大军的到来。冰毁狙击豌豆对准了最大的巨人僵尸，一发毙命，随后对其他植物说道“它们不是不可战胜的，我们同仇敌忾，我们团结一心，我们全力以赴，我们会前赴后继的拿下胜利！僵尸并不可怕，可怕的是我们会退缩，会害怕，但是兄弟们，一旦我们在这里畏手畏脚，在这里退缩在这里倒下，他们就会冲进庭院进行杀戮撕咬，为了我们的未来！为了守护的院落！绝不厚退一步！”</color>");
             CustomCore.TypeMgrExtra.IsIcePlant.Add((PlantType)IceDoomSniperPea.PlantID);
             CustomCore.TypeMgrExtra.LevelPlants.Add((PlantType)IceDoomSniperPea.PlantID, CardLevel.Gold);
-            IceDoomSniperPea.buff1 = CustomCore.RegisterCustomBuff("精装炸弹：冰毁炸弹爆炸的伤害x3，冰毁炸弹引爆后会为附近的僵尸挂上冰毁炸弹。2级时，每次引爆都造成寒冰毁灭菇爆炸，引爆时有50%概率触发超级爆头", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, 2, TravelBuffOptionButton.BgType.Night);
+            IceDoomSniperPea.buff1 = CustomCore.RegisterCustomBuff("精装炸弹：冰毁炸弹爆炸的伤害x3，冰毁炸弹引爆后会为附近的僵尸挂上冰毁炸弹。2级时，每次引爆都造成寒冰毁灭菇爆炸，引爆时有50%概率触发超级爆头，并附带10%韧性的伤害", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, 2, TravelBuffOptionButton.BgType.Night);
             IceDoomSniperPea.buff2 = CustomCore.RegisterCustomBuff("夜影暗袭：冰毁狙击射手每11发将锁定场上韧性上限最高的僵尸。每轮攻击有概率触发连狙", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, bgType: TravelBuffOptionButton.BgType.Night);
             CustomCore.AddUltimatePlant((PlantType)IceDoomSniperPea.PlantID);
         }
@@ -263,14 +263,26 @@ namespace IceDoomSniperPea.BepInEx
                 zombie.SetData("HasIceDoomBomb", false);
                 if (Board.Instance != null)
                 {
+                    int dmg = Lawnf.TravelAdvanced(IceDoomSniperPea.buff1) ? 1800 : 600;
                     Action<Zombie> action = (z) =>
                     {
                         z.SetCold(10f);
                         z.AddfreezeLevel(50);
+                        if (z.freezeTimer > 0f)
+                            z.TakeDamage(DmgType.Normal, dmg * 3);
                     };
-                    Board.Instance.CreateCherryExplode(transform.position, zombie.theZombieRow, CherryBombType.IceCharry, (Lawnf.TravelAdvanced(IceDoomSniperPea.buff1) ? 1800 : 600), action);
+                    Board.Instance.CreateCherryExplode(transform.position, zombie.theZombieRow, CherryBombType.IceCharry, dmg, action);
                     int totalHealth = zombie.theHealth + zombie.theFirstArmorHealth + zombie.theSecondArmorHealth;
-                    zombie.TakeDamage(DmgType.NormalAll, (int)(totalHealth * 0.05f) + 1);
+                    if (Utils.TravelCustomBuffLevel(BuffType.AdvancedBuff, IceDoomSniperPea.buff1) == 2)
+                    {
+                        int damage = zombie.GetDamage((int)(totalHealth * 0.1f) + 1, DmgType.Normal, false);
+                        zombie.theHealth -= damage;
+                        zombie.theFirstArmorHealth -= damage;
+                        zombie.theSecondArmorHealth -= damage;
+                        UpdateHealth(zombie);
+                    }
+                    else
+                        zombie.TakeDamage(DmgType.Normal, (int)(totalHealth * 0.05f) + 1);
                 }
                 if (Lawnf.TravelAdvanced(IceDoomSniperPea.buff1))
                     Diffusion();
@@ -313,10 +325,13 @@ namespace IceDoomSniperPea.BepInEx
 
         public void Bomb(int attackCount = 0)
         {
+            int dmg = Lawnf.TravelAdvanced(IceDoomSniperPea.buff1) ? 1800 : 600;
             Action<Zombie> action = (z) =>
             {
                 z.SetCold(10f);
                 z.AddfreezeLevel(50);
+                if (z.freezeTimer > 0f)
+                    z.TakeDamage(DmgType.Normal, dmg * 3);
             };
 
             Board board = Board.Instance;
@@ -326,9 +341,18 @@ namespace IceDoomSniperPea.BepInEx
                 return;
             }
 
-            board.CreateCherryExplode(gameObject.transform.position, zombie.theZombieRow, CherryBombType.IceCharry, (Lawnf.TravelAdvanced(IceDoomSniperPea.buff1) ? 5400 : 1800), action);
+            board.CreateCherryExplode(gameObject.transform.position, zombie.theZombieRow, CherryBombType.IceCharry, dmg, action);
             int totalHealth = zombie.theHealth + zombie.theFirstArmorHealth + zombie.theSecondArmorHealth;
-            zombie.TakeDamage(DmgType.NormalAll, (int)(totalHealth * 0.05f) + 1);
+            if (Utils.TravelCustomBuffLevel(BuffType.AdvancedBuff, IceDoomSniperPea.buff1) == 2)
+            {
+                int damage = zombie.GetDamage((int)(totalHealth * 0.1f) + 1, DmgType.Normal, false);
+                zombie.theHealth -= damage;
+                zombie.theFirstArmorHealth -= damage;
+                zombie.theSecondArmorHealth -= damage;
+                UpdateHealth(zombie);
+            }
+            else
+                zombie.TakeDamage(DmgType.Normal, (int)(totalHealth * 0.05f) + 1);
 
             bool iceDoom = false;
 

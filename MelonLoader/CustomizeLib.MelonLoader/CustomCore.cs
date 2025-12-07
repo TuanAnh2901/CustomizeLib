@@ -109,6 +109,13 @@ namespace CustomizeLib.MelonLoader
             public static Dictionary<PlantType, int> UmbrellaPlants { get; set; } = [];
         }
 
+        public enum BuffBgType
+        {
+            Day,
+            Night,
+            Pool
+        }
+
         /// <summary>
         /// 添加融合配方
         /// </summary>
@@ -272,6 +279,37 @@ namespace CustomizeLib.MelonLoader
         }
         #endregion
 #endif
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="bgType">词条背景类型</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
+        /// <returns></returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string color, PlantType plantType = PlantType.Nothing, int buffID = -1, BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuffAll(text, buffType, canUnlock, cost, color, plantType, 1, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="level">词条最高等级</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
+        /// <param name="bgType">词条背景类型</param>
+        /// <returns></returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost, int level, 
+            string color, PlantType plantType = PlantType.Nothing, int buffID = -1,
+            BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuffAll(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
 
         /// <summary>
         /// 注册自定义词条
@@ -284,16 +322,24 @@ namespace CustomizeLib.MelonLoader
         /// <param name="plantType">选词条时展示植物的类型</param>
         /// <param name="level">词条最高等级</param>
         /// <param name="bgType">词条背景类型</param>
+        /// <param name="zombieType">僵尸类型(仅词条类型为僵尸时使用)</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
         /// <returns>分到的词条id</returns>
-        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1, TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day)
+        public static int RegisterCustomBuffAll(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1,
+            TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day, ZombieType zombieType = ZombieType.NormalZombie,
+            int buffID = -1)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
             {
                 case BuffType.AdvancedBuff:
                     {
+                        if (BuffArrayCount.Item1 == -1)
+                            BuffArrayCount.Item1 = TravelMgr.advancedBuffs.Count;
                         int i = TravelMgr.advancedBuffs.Count;
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, buffID), i);
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
                         TravelMgr.advancedBuffs.Add(i, text);
                         if (level != 1)
@@ -304,7 +350,11 @@ namespace CustomizeLib.MelonLoader
                     }
                 case BuffType.UltimateBuff:
                     {
+                        if (BuffArrayCount.Item2 == -1)
+                            BuffArrayCount.Item2 = TravelMgr.ultimateBuffs.Count;
                         int i = TravelMgr.ultimateBuffs.Count;
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, buffID), i);
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
                         TravelMgr.ultimateBuffs.Add(i, text);
                         if (level != 1)
@@ -315,9 +365,14 @@ namespace CustomizeLib.MelonLoader
                     }
                 case BuffType.Debuff:
                     {
+                        if (BuffArrayCount.Item3 == -1)
+                            BuffArrayCount.Item3 = TravelMgr.debuffs.Count;
                         int i = TravelMgr.debuffs.Count;
-                        CustomDebuffs.Add(i, text);
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, buffID), i);
+                        CustomDebuffs.Add(i, (text, zombieType));
                         TravelMgr.debuffs.Add(i, text);
+                        TravelMgr.debuffIconPairs.Add(i, zombieType);
                         if (level != 1)
                             CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         if (!CustomBuffsBg.ContainsKey((buffType, i)))
@@ -329,9 +384,6 @@ namespace CustomizeLib.MelonLoader
             }
         }
 
-        [Obsolete]
-        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, TravelBuffOptionButton.BgType.Day);
         /// <summary>
         /// 注册自定义子弹
         /// </summary>
@@ -848,7 +900,7 @@ namespace CustomizeLib.MelonLoader
         /// <param name="cost">开大花费</param>
         /// <param name="skill">要运行的大招函数</param>
         public static void RegisterSuperSkill([NotNull] int id, [NotNull] Func<Plant, int> cost,
-            [NotNull] Action<Plant> skill) => SuperSkills.Add((PlantType)id, (cost, skill));
+            [NotNull] Action<Plant> skill, [NotNull] int defaultCost = 1000) => SuperSkills.Add((PlantType)id, (cost, skill, defaultCost));
 
         /// <summary>
         /// 添加自定义究极植物
@@ -1019,7 +1071,7 @@ namespace CustomizeLib.MelonLoader
         /// <summary>
         /// 自定义僵尸词条列表
         /// </summary>
-        public static Dictionary<int, string> CustomDebuffs { get; set; } = [];
+        public static Dictionary<int, (string, ZombieType)> CustomDebuffs { get; set; } = [];
 
         /// <summary>
         /// 自定义融合配方列表
@@ -1134,7 +1186,7 @@ namespace CustomizeLib.MelonLoader
         /// <summary>
         /// 自定义植物大招列表
         /// </summary>
-        public static Dictionary<PlantType, (Func<Plant, int>, Action<Plant>)> SuperSkills { get; set; } = [];
+        public static Dictionary<PlantType, (Func<Plant, int>, Action<Plant>, int)> SuperSkills { get; set; } = [];
 
         /// <summary>
         /// 自定义究极植物列表
@@ -1157,9 +1209,14 @@ namespace CustomizeLib.MelonLoader
         public static Dictionary<int, Action<Bullet>> CustomBulletMovingWay { get; set; } = [];
 
         /// <summary>
-        /// 自定义多级词条列表 Key：（Buff类型，ID） Value：（在列表的index，等级）
+        /// 自定义多级词条列表（Buff类型，ID）->（在列表的index，等级）
         /// </summary>
         public static Dictionary<(BuffType, int), (int, int)> CustomBuffsLevel { get; set; } = [];
+
+        /// <summary>
+        /// 自定义词条ID映射（Buff类型，指定ID）-> 内部ID
+        /// </summary>
+        public static Dictionary<(BuffType, int), int> CustomBuffIDMapping { get; set; } = [];
 
         /// <summary>
         /// 换贴图协程对象
@@ -1182,6 +1239,11 @@ namespace CustomizeLib.MelonLoader
         /// 存卡片检查的列表，用于管理Packet显示
         /// </summary>
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
+
+        /// <summary>
+        /// 注册二创词条前的数组长度
+        /// </summary>
+        public static (int, int, int) BuffArrayCount = (-1, -1, -1);
 
         /*/// <summary>
         /// 注册时缓存皮肤，加载时注册

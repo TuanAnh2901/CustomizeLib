@@ -3,8 +3,10 @@
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using BepInEx.Unity.IL2CPP.Utils;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using UnityEngine;
@@ -309,14 +311,20 @@ namespace CustomizeLib.BepInEx
         /// <param name="bgType">词条背景类型</param>
         /// <returns>分到的词条id</returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1, TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day)
+            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1,
+            TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day, ZombieType zombieType = ZombieType.NormalZombie,
+            int buffID = -1)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
             {
                 case BuffType.AdvancedBuff:
                     {
+                        if (BuffArrayCount.Item1 == -1)
+                            BuffArrayCount.Item1 = TravelMgr.advancedBuffs.Count;
                         int i = TravelMgr.advancedBuffs.Count;
+                        if (buffID != -1)
+                            i = buffID;
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
                         TravelMgr.advancedBuffs.Add(i, text);
                         if (level != 1)
@@ -327,7 +335,11 @@ namespace CustomizeLib.BepInEx
                     }
                 case BuffType.UltimateBuff:
                     {
+                        if (BuffArrayCount.Item2 == -1)
+                            BuffArrayCount.Item2 = TravelMgr.ultimateBuffs.Count;
                         int i = TravelMgr.ultimateBuffs.Count;
+                        if (buffID != -1)
+                            i = buffID;
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
                         TravelMgr.ultimateBuffs.Add(i, text);
                         if (level != 1)
@@ -338,9 +350,14 @@ namespace CustomizeLib.BepInEx
                     }
                 case BuffType.Debuff:
                     {
+                        if (BuffArrayCount.Item3 == -1)
+                            BuffArrayCount.Item3 = TravelMgr.debuffs.Count;
                         int i = TravelMgr.debuffs.Count;
-                        CustomDebuffs.Add(i, text);
+                        if (buffID != -1)
+                            i = buffID;
+                        CustomDebuffs.Add(i, (text, zombieType));
                         TravelMgr.debuffs.Add(i, text);
+                        TravelMgr.debuffIconPairs.Add(i, zombieType);
                         if (level != 1)
                             CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
                         if (!CustomBuffsBg.ContainsKey((buffType, i)))
@@ -976,7 +993,11 @@ namespace CustomizeLib.BepInEx
 
         public static Dictionary<int, (PlantType, string, Func<bool>, int, string?)> CustomAdvancedBuffs { get; set; } = [];
         public static Dictionary<BulletType, GameObject> CustomBullets { get; set; } = [];
-        public static Dictionary<int, string> CustomDebuffs { get; set; } = [];
+
+        /// <summary>
+        /// 自定义僵尸词条列表
+        /// </summary>
+        public static Dictionary<int, (string, ZombieType)> CustomDebuffs { get; set; } = [];
         public static List<(int, int, int)> CustomFusions { get; set; } = [];
         public static List<CustomLevelData> CustomLevels { get; set; } = [];
         public static Dictionary<ParticleType, GameObject> CustomParticles { get; set; } = [];
@@ -1079,6 +1100,10 @@ namespace CustomizeLib.BepInEx
         /// </summary>
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
 
+        /// <summary>
+        /// 注册二创词条前的数组长度
+        /// </summary>
+        public static (int, int, int) BuffArrayCount = (-1, -1, -1);
         public static ManualLogSource CLogger { get; set; } = null!;
     }
 }

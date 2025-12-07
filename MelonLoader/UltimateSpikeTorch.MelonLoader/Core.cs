@@ -18,8 +18,8 @@ namespace UltimateSpikeTorch
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             var ab = CustomCore.GetAssetBundle(MelonAssembly.Assembly, "ultimatespiketorch");
-            CustomCore.RegisterCustomBullet<Bullet_firePea, Bullet_superFirePea_small>((BulletType)Bullet_superFirePea_small.BulletID, ab.GetAsset<GameObject>("Bullet_superFirePea_small"));
-            CustomCore.RegisterCustomBullet<Bullet_ironPea, Bullet_puffFireIronPea>((BulletType)Bullet_puffFireIronPea.BulletID, ab.GetAsset<GameObject>("Bullet_superFirePea_small"));
+            CustomCore.RegisterCustomBullet<Bullet_firePea>((BulletType)Bullet_superFirePea_small.BulletID, ab.GetAsset<GameObject>("Bullet_superFirePea_small"));
+            CustomCore.RegisterCustomBullet<Bullet_ironPea>((BulletType)Bullet_puffFireIronPea.BulletID, ab.GetAsset<GameObject>("Bullet_superFirePea_small"));
             CustomCore.RegisterCustomPlant<CaltropTorch, UltimateSpikeTorch>(UltimateSpikeTorch.PlantID, ab.GetAsset<GameObject>("UltimateSpikeTorchPrefab"),
                 ab.GetAsset<GameObject>("UltimateSpikeTorchPreview"), new List<(int, int)>
                 {

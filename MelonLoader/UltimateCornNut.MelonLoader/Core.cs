@@ -57,6 +57,7 @@ namespace UltimateCornNut.MelonLoader
             {
                 if (__instance.theAttackTarget.TryGetComponent<Plant>(out var plant) && plant != null && (int)plant.thePlantType == UltimateCornNut.PlantID)
                 {
+                    __instance.BeSmall();
                     __instance.Buttered(2f);
                     __instance.SetPortaled(3f);
                     if (plant.attributeCountdown == 0f && UnityEngine.Random.Range(0, 4) == 0)
@@ -74,7 +75,6 @@ namespace UltimateCornNut.MelonLoader
                         float targetY = Mouse.Instance.GetLandY(targetX, __instance.theZombieRow);
                         Vector3 targetPos = new Vector3(targetX, targetY, 0f);
                         __instance.AdjustPosition(targetPos);
-                        __instance.BeSmall();
                     }
                 }
             }
@@ -95,6 +95,21 @@ namespace UltimateCornNut.MelonLoader
                     __instance.restoreCount = -1;
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(Plant), nameof(Plant.GetDamage))]
+    public static class Plant_GetDamage_Patch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(Plant __instance, ref int __result)
+        {
+            if (__instance != null && (int)__instance.thePlantType == UltimateCornNut.PlantID && UnityEngine.Random.Range(0, 3) == 0)
+            {
+                __result = 0;
+                return false;
+            }
+            return true;
         }
     }
 

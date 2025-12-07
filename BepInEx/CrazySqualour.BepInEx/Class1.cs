@@ -41,7 +41,7 @@ namespace CrazySqualourBepInEx
             customLevelData.BoardTag = boardTag;
             customLevelData.SceneType = SceneType.Day_6;
             customLevelData.RowCount = 6;
-            customLevelData.WaveCount = () => 3;
+            customLevelData.WaveCount = () => 30;
             customLevelData.BgmType = MusicType.Day_drum;
             customLevelData.Logo = Extensions.GetAsset<Sprite>(ab, "icon");
             customLevelData.ZombieList = () => new List<ZombieType>()

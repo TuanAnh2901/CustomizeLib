@@ -163,7 +163,7 @@ namespace SolarSpruce
                 {
                     Solar.Instance.deathTime += 15;
                 }
-            });
+            }, 1000);
         }
 
         public UltimateSpruce plant => gameObject.GetComponent<UltimateSpruce>();

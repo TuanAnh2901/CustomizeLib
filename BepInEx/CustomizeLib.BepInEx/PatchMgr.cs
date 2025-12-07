@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using TMPro;
+using Unity.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -140,7 +141,9 @@ namespace CustomizeLib.BepInEx
             {
                 PlantType plantType = (PlantType)__instance.theSeedType;
                 if (CustomCore.CustomPlantsSkinActive.ContainsKey(plantType) && CustomCore.CustomPlantsSkinActive[plantType]) goto DIR_SEARCH;
-                __instance.skinButton.SetActive(CustomCore.CustomPlantsSkin.ContainsKey(plantType));
+
+                if (CustomCore.CustomPlantTypes.Contains(plantType))
+                    __instance.skinButton.SetActive(CustomCore.CustomPlantsSkin.ContainsKey(plantType));
 
                 if (!CustomCore.CustomPlantsSkin.TryGetValue(plantType, out var data)) goto DIR_SEARCH;
                 if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue((PlantType)__instance.theSeedType, out var _))
@@ -1956,6 +1959,55 @@ namespace CustomizeLib.BepInEx
 #endif
     }
 
+    [HarmonyPatch(typeof(TravelLookMenu))]
+    public static class TravelLookMenuPatch
+    {
+        [HarmonyPatch(nameof(TravelLookMenu.GetAdvBuffs))]
+        [HarmonyPostfix]
+        public static void PostGetAdvBuffs(ref Il2CppSystem.Collections.Generic.List<int> __result)
+        {
+            if (!(CustomCore.CustomAdvancedBuffs.Count > 0))
+                return;
+            for (int i = __result.Count - 1; i >= CustomCore.BuffArrayCount.Item1; i--)
+            {
+                if (!CustomCore.CustomAdvancedBuffs.ContainsKey(i) && i < __result.Count && i >= 0)
+                {
+                    __result.RemoveAt(i);
+                }
+            }
+        }
+
+        [HarmonyPatch(nameof(TravelLookMenu.GetDebuffs))]
+        [HarmonyPostfix]
+        public static void PostGetDebuffs(ref Il2CppSystem.Collections.Generic.List<int> __result)
+        {
+            if (!(CustomCore.CustomDebuffs.Count > 0))
+                return;
+            for (int i = __result.Count - 1; i >= CustomCore.BuffArrayCount.Item2; i--)
+            {
+                if (!CustomCore.CustomDebuffs.ContainsKey(i) && i < __result.Count && i >= 0)
+                {
+                    __result.RemoveAt(i);
+                }
+            }
+        }
+
+        [HarmonyPatch(nameof(TravelLookMenu.GetUltiBuffs))]
+        [HarmonyPostfix]
+        public static void PostGetUltimateBuffs(ref Il2CppSystem.Collections.Generic.List<Vector2Int> __result)
+        {
+            if (!(CustomCore.CustomUltimateBuffs.Count > 0))
+                return;
+            for (int i = __result.Count - 1; i >= CustomCore.BuffArrayCount.Item3; i--)
+            {
+                if (!CustomCore.CustomUltimateBuffs.ContainsKey(i) && i < __result.Count && i >= 0)
+                {
+                    __result.RemoveAt(i);
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(TravelStore))]
     public static class TravelStorePatch
     {
@@ -2789,6 +2841,20 @@ namespace CustomizeLib.BepInEx
                 CreatePlant.Instance.SetPlant(p.Item1, p.Item2, p.Item3);
             }
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(WaveManager))]
+    public static class WaveManagerPatch
+    {
+        [HarmonyPatch(nameof(WaveManager.GetMaxWave))]
+        [HarmonyPostfix]
+        public static void PostGetMaxWave(ref int __result)
+        {
+            if (Utils.IsCustomLevel(out var levelData))
+            {
+                __result = levelData.WaveCount();
+            }
         }
     }
 
