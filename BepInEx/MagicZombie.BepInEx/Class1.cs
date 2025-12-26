@@ -69,13 +69,13 @@ namespace MagicZombie.BepInEx
         {
             if (Board.Instance is not null && !loseHand && zombie is not null)
             {
-                if (Board.Instance.plantArray is null)
+                if (Board.Instance.boardEntity.plantArray is null)
                 {
                     CreateZombie.Instance.SetZombie(zombie.theZombieRow, ZombieType.ImpZombie, zombie.axis.transform.position.x);
                     ParticleManager.Instance.SetParticle(ParticleType.RandomCloud, zombie.axis.transform.position);
                     return;
                 }
-                var list = Board.Instance.plantArray.ToArray().ToList().Where(p => p is not null).ToList();
+                var list = Board.Instance.boardEntity.plantArray.ToArray().ToList().Where(p => p is not null).ToList();
                 if (list.Count <= 0)
                 {
                     CreateZombie.Instance.SetZombie(zombie.theZombieRow, ZombieType.ImpZombie, zombie.axis.transform.position.x);

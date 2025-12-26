@@ -54,8 +54,8 @@ namespace DoomGatlingBlover.MelonLoader
         {
             if (plant != null && GameAPP.theGameStatus == GameStatus.InGame)
             {
-                if (Lawnf.TravelAdvanced((AdvBuff)2) && plant.thePlantAttackCountDown > 0.75f)
-                    plant.thePlantAttackCountDown = 0.75f;
+                if (Lawnf.TravelAdvanced((AdvBuff)2))
+                    plant.thePlantAttackCountDown -= Time.deltaTime;
                 plant.attributeCountdown = float.MaxValue; // fuck lpp
             }
         }

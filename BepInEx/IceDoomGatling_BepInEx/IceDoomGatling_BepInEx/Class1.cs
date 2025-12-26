@@ -48,7 +48,8 @@ namespace IceDoomGatlingBepInEx
                 1.5f, 0f, 300, 300, 0, 600);
 
             CustomCore.TypeMgrExtra.IsIcePlant.Add((PlantType)IceDoomGatling.PlantID);
-            CustomCore.AddPlantAlmanacStrings(IceDoomGatling.PlantID, $"寒冰毁灭菇机枪射手({IceDoomGatling.PlantID})", "如同死神一般的力量...\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>伤害：</color><color=red>300×4/1.5秒，1800</color>\n<color=#3D1400>融合配方：</color><color=red>豌豆射手×4+寒冰菇+毁灭菇</color>\n<color=#3D1400>特点：</color><color=red>发射小寒冰毁灭菇子弹造成10点冻结值和10秒减速。第8发子弹改为大寒冰毁灭菇子弹，伤害1800并造成100点冻结值，半径3格无衰减溅射，对直击僵尸造成10秒减速，并在直击僵尸处生成伤害为1800的不冻结关卡的寒冰毁灭菇效果，然后休息3秒</color>\n<color=#3D1400>词条1：</color><color=red>枕戈待旦：发射完大寒冰毁灭菇子弹后不会休息。</color>\n<color=#3D1400>词条2：</color><color=red>核能威慑：每第4发子弹改为大寒冰毁灭菇子弹。</color>\n\n<color=#3D1400>“冰冻三尺非一日之寒”，寒冰毁灭菇机枪射手低调的外形下藏着一颗冰冷的心，对僵尸们来说就是“温柔杀手”，因为杀僵不见血。</color>");
+            CustomCore.AddPlantAlmanacStrings(IceDoomGatling.PlantID, $"寒冰毁灭菇机枪射手", "如同死神一般的力量...\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>伤害：</color><color=red>300×4/1.5秒，1800</color>\n<color=#3D1400>融合配方：</color><color=red>豌豆射手×4+寒冰菇+毁灭菇</color>\n<color=#3D1400>特点：</color><color=red>发射小寒冰毁灭菇子弹造成10点冻结值和10秒减速。第8发子弹改为大寒冰毁灭菇子弹，伤害1800并造成100点冻结值，半径3格无衰减溅射，对直击僵尸造成10秒减速，并在直击僵尸处生成伤害为1800的不冻结关卡的寒冰毁灭菇效果，然后休息3秒</color>\n<color=#3D1400>词条1：</color><color=red>枕戈待旦：发射完大寒冰毁灭菇子弹后不会休息。</color>\n<color=#3D1400>词条2：</color><color=red>核能威慑：每第4发子弹改为大寒冰毁灭菇子弹。</color>\n\n<color=#3D1400>“冰冻三尺非一日之寒”，寒冰毁灭菇机枪射手低调的外形下藏着一颗冰冷的心，对僵尸们来说就是“温柔杀手”，因为杀僵不见血。</color>");
+            CustomCore.AddUltimatePlant((PlantType)IceDoomGatling.PlantID);
         }
     }
 
@@ -169,7 +170,8 @@ namespace IceDoomGatlingBepInEx
                             3.0f,
                             __instance.zombieLayer,
                             __instance.theBulletRow,
-                            1800
+                            1800,
+                            (PlantType)IceDoomGatling.PlantID
                         );
 
                         GameAPP.board.GetComponent<Board>().SetDoom(Mouse.Instance.GetColumnFromX(zombie.axis.transform.position.x), zombie.theZombieRow, false, true, zombie.axis.position, 1800, 0);

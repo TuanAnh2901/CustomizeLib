@@ -29,7 +29,7 @@ namespace SolarEclipseCabbage.MelonLoader
                 ab.GetAsset<GameObject>("SolarEclipseCabbagePreview"), [], 2f, 0f, 300, 300, 90f, 850);
             CustomCore.RegisterCustomPlantSkin<SolarCabbage, SolarEclipseCabbage>((int)SolarEclipseCabbage.PlantID, ab.GetAsset<GameObject>("SolarEclipseCabbagePrefabSkin"),
                 ab.GetAsset<GameObject>("SolarEclipseCabbagePreviewSkin"), [], 2f, 0f, 300, 300, 90f, 850);
-            CustomCore.AddPlantAlmanacStrings((int)SolarEclipseCabbage.PlantID, $"究级蚀日神卷心菜({SolarEclipseCabbage.PlantID})",
+            CustomCore.AddPlantAlmanacStrings((int)SolarEclipseCabbage.PlantID, $"究级蚀日神卷心菜",
                 "昼临异象，墨噬金轮。日食下，灼射的植物将迎来异象强化。\n" +
                 "<color=#0000FF>究级太阳神卷心菜的限定形态</color>\n\n" +
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
@@ -42,7 +42,7 @@ namespace SolarEclipseCabbage.MelonLoader
                 "<color=#3D1400>日食：</color><color=red>①存在机制同太阳\n" +
                 "②日食在场时，在场的所有植物增加50%攻击力，阳光高于15000时，消耗200阳光使攻击力x3</color>\n" +
                 "<color=#3D1400>大招：</color><color=red>消耗1000金钱，召唤日食</color>\n" +
-                "<color=#3D1400>连携词条：</color><color=red>昼晦宵赤：当究级蚀日神卷心菜和究级血月神卷心菜同时在场时；日食的加成x3，血月召唤的尸潮大幅加强，且日食和血月的持续时间无限，每秒在场上陨落4～6颗伤害为7200的小陨星。每10秒陨落赤晦陨星，造成1800x（1+0.5x太阳神数量和月亮神数量）x（100x蚀日神和血月神数量），并分裂180个伤害400的子弹，赤晦陨星落下时额外携带10个小陨星一起落下</color>\n\n" +
+                "<color=#3D1400>连携词条：</color><color=red>昼晦宵赤：当究级蚀日神卷心菜和究级血月神卷心菜同时在场时；日食的加成x3，所有魅惑僵尸大幅加强，且日食和血月的持续时间无限。每秒在场上陨落4～8颗伤害为7200的小陨星，同时伤害本体和防具，每株蚀日神和血月神为小陨星伤害增加50%。每10秒陨落赤晦陨星，造成1800x（1+0.5x太阳神数量和月亮神数量）x（100x蚀日神和血月神数量），并分裂180个伤害400的子弹，赤晦陨星陨落时额外携带10个小陨星一起落下</color>\n\n" +
                 "<color=#3D1400>当黑日蚀尽天光，乌云密布，声势浩大，世间万物被黑暗笼罩，诸般生灵寂静无声。他高悬黑日之上，宣告光明与秩序的死刑。他是悖逆天理之神，以黑暗重新定义光明。</color>");
             SolarEclipseCabbage.RegisterSuperSkill();
             CustomCore.RegisterCustomBullet<Bullet_sunCabbage>(SolarEclipseCabbage.BulletID, ab.GetAsset<GameObject>("Bullet_solarEclipseCabbage"));
@@ -64,6 +64,7 @@ namespace SolarEclipseCabbage.MelonLoader
             CustomCore.TypeMgrExtra.LevelPlants.Add(SolarEclipseCabbage.PlantID, CardLevel.Red);
             CustomCore.AddFusion((int)PlantType.UltimateCabbage, (int)SolarEclipseCabbage.PlantID, (int)PlantType.SunFlower);
             CustomCore.AddFusion((int)PlantType.UltimateCabbage, (int)PlantType.SunFlower, (int)SolarEclipseCabbage.PlantID);
+            CustomCore.AddUltimatePlant((PlantType)SolarEclipseCabbage.PlantID);
         }
 
         /*public override void OnUpdate()
@@ -155,7 +156,7 @@ namespace SolarEclipseCabbage.MelonLoader
         public float deathTime = 31.0f;
         public float timer = 0.5f;
         public float starTimer = 10f;
-        public float bombTimer = 1f;
+        public float bombTimer = 0.5f;
         public float godTimer = 3f;
         public bool arrived = false;
         public Vector3 targetPosition = default;
@@ -210,7 +211,7 @@ namespace SolarEclipseCabbage.MelonLoader
                     if (Lawnf.TravelUltimate(23))
                         buffAdd = true;
 
-                    foreach (var plant in board.plantArray)
+                    foreach (var plant in board.boardEntity.plantArray)
                     {
                         if (plant == null) continue;
 
@@ -280,9 +281,9 @@ namespace SolarEclipseCabbage.MelonLoader
                     bombTimer -= Time.deltaTime;
                     if (bombTimer <= 0f)
                     {
-                        for (int i = 0; i < UnityEngine.Random.Range(4, 7); i++)
+                        for (int i = 0; i < UnityEngine.Random.Range(2, 5); i++)
                             SolarEclipseBomb.SetBomb();
-                        bombTimer = 1f;
+                        bombTimer = 0.5f;
                     }
                 }
 
@@ -458,7 +459,9 @@ namespace SolarEclipseCabbage.MelonLoader
                 return;
             }
             SetStartPosition();
+
             maxTime = UnityEngine.Random.Range(1.8f, 2.1f);
+            damage += (Lawnf.GetPlantCount(PlantType.UltimateRedLunar, board) + Lawnf.GetPlantCount(SolarEclipseCabbage.PlantID, board)) * 3600;
         }
 
         public void Update()
@@ -484,7 +487,17 @@ namespace SolarEclipseCabbage.MelonLoader
             }
             else
             {
-                var zombie = list[UnityEngine.Random.Range(0, list.Count)];
+                int max = -1;
+                Zombie zombie = null;
+                foreach (var z in list)
+                {
+                    if (z.theMaxHealth + z.theFirstArmorMaxHealth + z.theSecondArmorMaxHealth > max)
+                    {
+                        zombie = z;
+                        max = z.theMaxHealth + z.theFirstArmorMaxHealth + z.theSecondArmorMaxHealth;
+                    }
+                }
+                zombie = UnityEngine.Random.Range(1, 101) <= 80 ? zombie : list[UnityEngine.Random.Range(0, list.Count)];
                 target = new Vector2(zombie.axis.transform.position.x, zombie.axis.transform.position.y + 0.5f);
             }
 
@@ -519,7 +532,7 @@ namespace SolarEclipseCabbage.MelonLoader
                 if (collider != null && !collider.IsDestroyed() && collider.TryGetComponent<Zombie>(out var zombie) && zombie != null &&
                     !zombie.IsDestroyed() && !zombie.beforeDying && !zombie.isMindControlled)
                 {
-                    zombie.TakeDamage(DmgType.NormalAll, damage);
+                    zombie.TakeDamage(DmgType.RealDamage, damage);
                 }
             }
 
@@ -593,7 +606,7 @@ namespace SolarEclipseCabbage.MelonLoader
         {
             if (Board.Instance == null)
                 return;
-            foreach (var plant in Board.Instance.plantArray)
+            foreach (var plant in Board.Instance.boardEntity.plantArray)
                 if ((plant != null && plant.thePlantType == SolarEclipseCabbage.PlantID) || SolarEclipse.Instance != null)
                 {
                     if (SolarEclipse.Instance == null)
@@ -687,7 +700,7 @@ namespace SolarEclipseCabbage.MelonLoader
                 {
                     if (SolarEclipse.Instance == null)
                     {
-                        foreach (var plant in __instance.plantArray)
+                        foreach (var plant in __instance.boardEntity.plantArray)
                         {
                             if (plant == null) continue;
                             if (plant.thePlantType != SolarEclipseCabbage.PlantID) continue;

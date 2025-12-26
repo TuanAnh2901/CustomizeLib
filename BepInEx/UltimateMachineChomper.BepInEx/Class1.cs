@@ -7,6 +7,7 @@ using System.Reflection;
 using CustomizeLib.BepInEx;
 using TMPro;
 using Unity.VisualScripting;
+using Microsoft.VisualBasic;
 
 namespace UltimateMachineChomper.BepInEx
 {
@@ -39,7 +40,7 @@ namespace UltimateMachineChomper.BepInEx
                     plant.Recover(PlantDataLoader.plantData[UltimateMachineChomper.PlantID].field_Public_Int32_0 * 0.2f);
                 });
             CustomCore.AddUltimatePlant((PlantType)UltimateMachineChomper.PlantID);
-            CustomCore.AddPlantAlmanacStrings(UltimateMachineChomper.PlantID, $"究极机械战神({UltimateMachineChomper.PlantID})",
+            CustomCore.AddPlantAlmanacStrings(UltimateMachineChomper.PlantID, $"究极机械战神",
                "机鱼公司的终极产品。\n\n" +
                "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
                "<color=#3D1400>融合配方：</color><color=red>超级大嘴花+超级机械坚果</color>\n" +
@@ -85,53 +86,54 @@ namespace UltimateMachineChomper.BepInEx
 
         public void Start()
         {
-            if (plant != null && GameAPP.theGameStatus == GameStatus.InGame)
+            try
             {
-                plant.shoot = transform.FindChild("Shoot");
-                plant.SetAttackRange();
-                if (plant.thePlantHealth == 16000)
-                    plant.thePlantHealth = 20 * plant.thePlantMaxHealth;
-                health = plant.thePlantHealth;
-                if (plant.attributeCount != 0)
-                    maxDamage = plant.attributeCount;
-                maxDamage = Mathf.Max(4000, maxDamage);
-                damageTimes = 1f - (17500 - maxDamage) / 150 * 0.01f; // = 1 - (13500 - 4000) / 150 * 0.01f = 0.9
-                damageTimes = Mathf.Max(0.1f, damageTimes);
-                damageTimes = (float)Math.Round(damageTimes, 2);
-                plant.jigsawType.Add(JigsawType.Instead);
-                plant.jigsawType.Add(JigsawType.Uncrashable);
-                if (plant.killingText != null && plant.killingTextShadow != null)
+                if (plant != null && GameAPP.theGameStatus == GameStatus.InGame)
                 {
-                    plant.killingText.gameObject.SetActive(false);
-                    plant.killingTextShadow.gameObject.SetActive(false);
+                    plant.shoot = transform.FindChild("Shoot");
+                    plant.SetAttackRange();
+                    if (plant.thePlantHealth == 16000)
+                        plant.thePlantHealth = 20 * plant.thePlantMaxHealth;
+                    health = plant.thePlantHealth;
+                    if (plant.attributeCount != 0)
+                        maxDamage = plant.attributeCount;
+                    maxDamage = Mathf.Max(4000, maxDamage);
+                    damageTimes = 1f - (17500 - maxDamage) / 150 * 0.01f; // = 1 - (13500 - 4000) / 150 * 0.01f = 0.9
+                    damageTimes = Mathf.Max(0.1f, damageTimes);
+                    damageTimes = (float)Math.Round(damageTimes, 2);
+                    plant.jigsawType.Add(JigsawType.Instead);
+                    plant.jigsawType.Add(JigsawType.Uncrashable);
+                    if (plant.killingText != null && plant.killingTextShadow != null)
+                    {
+                        plant.killingText.gameObject.SetActive(false);
+                        plant.killingTextShadow.gameObject.SetActive(false);
+                    }
+                    InitText();
+                    UpdateText();
+                    plant.UpdateText();
+                    sprites.Add(plant.gameObject.transform.FindChild("body/face_upper/Chomper_face_upper").gameObject);
+                    sprites.Add(plant.gameObject.transform.FindChild("body/body/Chomper_body").gameObject);
+                    sprites.Add(plant.gameObject.transform.FindChild("body/back/armor_back").gameObject);
+                    sprites.Add(plant.gameObject.transform.FindChild("body/head/armor_head").gameObject);
+                    sprites.Add(plant.gameObject.transform.FindChild("body/front/armor_front").gameObject);
+                    plant.range = new Vector2(3.5f, 3.5f);
+                    Vector2 newPos = new Vector2(plant.axis.transform.position.x + 0.75f, plant.axis.transform.position.y);
+                    plant.pos = newPos;
+                    totalDamage = 0;
+                    landSubmarine = null;
+                    isInit = true;
                 }
-                InitText();
-                UpdateText();
-                plant.UpdateText();
-                sprites.Add(plant.gameObject.transform.FindChild("body/face_upper/Chomper_face_upper").gameObject);
-                sprites.Add(plant.gameObject.transform.FindChild("body/body/Chomper_body").gameObject);
-                sprites.Add(plant.gameObject.transform.FindChild("body/back/armor_back").gameObject);
-                sprites.Add(plant.gameObject.transform.FindChild("body/head/armor_head").gameObject);
-                sprites.Add(plant.gameObject.transform.FindChild("body/front/armor_front").gameObject);
-                plant.range = new Vector2(3.5f, 3.5f);
-                Vector2 newPos = new Vector2(plant.axis.transform.position.x + 0.75f, plant.axis.transform.position.y);
-                plant.pos = newPos;
-                totalDamage = 0;
-                landSubmarine = null;
-                isInit = true;
             }
+            catch (NullReferenceException) { }
         }
 
         public void Update()
         {
-            if (!isInit) Start();
-            if (plant != null && GameAPP.theGameStatus == GameStatus.InGame)
+            try
             {
-                if (plant.targetZombie == null && GameAPP.theGameStatus == GameStatus.InGame)
-                    plant.ChomperSearchZombie();
-                if (!isInit) Start();
                 if (plant != null && GameAPP.theGameStatus == GameStatus.InGame)
                 {
+                    if (!isInit) Start();
                     if (plant.targetZombie == null && GameAPP.theGameStatus == GameStatus.InGame)
                         plant.ChomperSearchZombie();
                     int value = Lawnf.TravelUltimate(1) ? plant.thePlantMaxHealth : plant.thePlantMaxHealth * 2;
@@ -140,52 +142,57 @@ namespace UltimateMachineChomper.BepInEx
                         plant.attributeCountdown = 0f;
                     UpdateText();
                 }
-                UpdateText();
             }
+            catch (NullReferenceException) { }
         }
 
         public void InitText()
         {
-            if (plant == null) return;
-            if (plant.healthSlider.textHead == null && GameAPP.theGameStatus == GameStatus.InGame) plant.healthSlider.textHead = plant.gameObject.transform.FindChild("textHead");
-            if (extraText == null)
+            try
             {
-                GameObject extraTextGO = new GameObject("ExtraText");
-                extraText = extraTextGO.AddComponent<TextMeshPro>();
-                extraTextGO.transform.SetParent(plant.healthSlider.textHead.transform);
-                extraTextGO.transform.localPosition = new Vector3(0f, -0.5f, 0);
-                extraText.font = GameAPP.font;
-                String status = "";
-                if (plant.undeadTimer > 0)
-                    status = "不死:" + ((Mathf.FloorToInt(plant.undeadTimer) + 1) + "秒");
-                else if (plant.undeadCD > 0)
-                    status = "不死:" + ((Mathf.FloorToInt(plant.undeadCD) + 1) + "秒");
-                else if (plant.undead)
-                    status = "不死:就绪";
-                extraText.text = $"限伤:{maxDamage}\n" +
-                        $"减伤:{Mathf.FloorToInt(100 - (damageTimes * 100))}%\n" +
-                        status + "\n" +
-                        "吞噬:" + ((plant.attributeCountdown <= 0) ? "就绪" : ((Mathf.FloorToInt(plant.attributeCountdown) + 1) + "秒"));
-                extraText.color = Color.cyan;
-                extraText.alignment = (TextAlignmentOptions)514;
-                extraText.fontSize = 2.1f;
-                extraText.GetComponent<RectTransform>().sizeDelta = new Vector2(2f, 1f);
-                extraText.sortingOrder = 32;
+                if (plant == null) return;
+                if (plant.healthSlider == null || plant.healthSlider.textHead == null) return;
+                if (plant.healthSlider.textHead == null && GameAPP.theGameStatus == GameStatus.InGame) plant.healthSlider.textHead = plant.gameObject.transform.FindChild("TextHead");
+                if (extraText == null)
+                {
+                    GameObject extraTextGO = new GameObject("ExtraText");
+                    extraText = extraTextGO.AddComponent<TextMeshPro>();
+                    extraTextGO.transform.SetParent(plant.healthSlider.textHead.transform);
+                    extraTextGO.transform.localPosition = new Vector3(0f, -0.5f, 0);
+                    extraText.font = GameAPP.font;
+                    String status = "";
+                    if (plant.undeadTimer > 0)
+                        status = "不死:" + ((Mathf.FloorToInt(plant.undeadTimer) + 1) + "秒");
+                    else if (plant.undeadCD > 0)
+                        status = "不死:" + ((Mathf.FloorToInt(plant.undeadCD) + 1) + "秒");
+                    else if (plant.undead)
+                        status = "不死:就绪";
+                    extraText.text = $"限伤:{maxDamage}\n" +
+                            $"减伤:{Mathf.FloorToInt(100 - (damageTimes * 100))}%\n" +
+                            status + "\n" +
+                            "吞噬:" + ((plant.attributeCountdown <= 0) ? "就绪" : ((Mathf.FloorToInt(plant.attributeCountdown) + 1) + "秒"));
+                    extraText.color = Color.cyan;
+                    extraText.alignment = (TextAlignmentOptions)514;
+                    extraText.fontSize = 2.1f;
+                    extraText.GetComponent<RectTransform>().sizeDelta = new Vector2(2f, 1f);
+                    extraText.sortingOrder = 32;
+                }
+                if (extraTextShadow == null)
+                {
+                    GameObject extraTextShadowGO = new GameObject("ExtraTextShadow");
+                    extraTextShadow = extraTextShadowGO.AddComponent<TextMeshPro>();
+                    extraTextShadowGO.transform.SetParent(plant.healthSlider.textHead.transform);
+                    extraTextShadowGO.transform.localPosition = new Vector3(0.01f, -0.51f, 0);
+                    extraTextShadow.font = GameAPP.font;
+                    extraTextShadow.text = extraText.text;
+                    extraTextShadow.color = Color.black;
+                    extraTextShadow.alignment = (TextAlignmentOptions)514;
+                    extraTextShadow.fontSize = 2.1f;
+                    extraTextShadow.GetComponent<RectTransform>().sizeDelta = new Vector2(2f, 1f);
+                    extraTextShadow.sortingOrder = 31;
+                }
             }
-            if (extraTextShadow == null)
-            {
-                GameObject extraTextShadowGO = new GameObject("ExtraTextShadow");
-                extraTextShadow = extraTextShadowGO.AddComponent<TextMeshPro>();
-                extraTextShadowGO.transform.SetParent(plant.healthSlider.textHead.transform);
-                extraTextShadowGO.transform.localPosition = new Vector3(0.01f, -0.51f, 0);
-                extraTextShadow.font = GameAPP.font;
-                extraTextShadow.text = extraText.text;
-                extraTextShadow.color = Color.black;
-                extraTextShadow.alignment = (TextAlignmentOptions)514;
-                extraTextShadow.fontSize = 2.1f;
-                extraTextShadow.GetComponent<RectTransform>().sizeDelta = new Vector2(2f, 1f);
-                extraTextShadow.sortingOrder = 31;
-            }
+            catch (NullReferenceException) { }
         }
 
         public void SetTextPosition()
@@ -409,7 +416,7 @@ namespace UltimateMachineChomper.BepInEx
                     dynamicDamage *= 1.5f;
 
                 // 对僵尸造成伤害
-                zombie.TakeDamage(DmgType.NormalAll, (int)dynamicDamage, false);
+                zombie.TakeDamage(DmgType.NormalAll, (int)dynamicDamage);
 
                 // 播放音效
                 GameAPP.PlaySound(49, 0.5f, 1.0f);
@@ -624,7 +631,7 @@ namespace UltimateMachineChomper.BepInEx
                         if (Mathf.Abs(bulletColumn - zombieColumn) <= 1 && Mathf.Abs(__instance.theBulletRow - z.theZombieRow) <= 1)
                         {
                             // 对僵尸造成伤害
-                            z.TakeDamage(DmgType.NormalAll, __instance.Damage, false);
+                            z.TakeDamage(DmgType.NormalAll, __instance.Damage);
                         }
                     }
                 }
@@ -656,13 +663,13 @@ namespace UltimateMachineChomper.BepInEx
         [HarmonyPrefix]
         public static void Prefix(Bucket __instance)
         {
-            if (Board.Instance != null && Board.Instance.plantArray != null)
+            if (Board.Instance != null && Board.Instance.boardEntity.plantArray != null)
             {
                 List<Plant> plants = new List<Plant>();
                 int num = 0;
-                for (int i = 0; i < Board.Instance.plantArray.Count; i++)
+                for (int i = 0; i < Board.Instance.boardEntity.plantArray.Count; i++)
                 {
-                    Plant p = Board.Instance.plantArray[i];
+                    Plant p = Board.Instance.boardEntity.plantArray[i];
                     if (p != null && (((int)p.thePlantType == UltimateMachineChomper.PlantID) || (p.thePlantType == PlantType.SuperMachineNut)))
                     {
                         num++;

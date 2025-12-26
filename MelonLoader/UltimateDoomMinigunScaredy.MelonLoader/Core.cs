@@ -24,16 +24,19 @@ namespace UltimateDoomMinigunScaredy.MelonLoader
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
                 "<color=#3D1400>使用条件：</color><color=red>①融合或转化毁灭机枪胆小菇时有2%概率变异\n" +
                 "②神秘模式\n" +
-                "*可使用胆小菇切回毁灭机枪胆小菇</color>\n" +
+                "*可使用胆小菇切回毁灭机枪胆小菇\n" +
+                "*可使用豌豆射手切换究极毁灭速射机枪</color>\n" +
                 "<color=#3D1400>伤害：</color><color=red>300/0.5秒</color>\n" +
                 "<color=#3D1400>特点：</color><color=red>①每攻击1次减少0.02秒攻击间隔，最低0.1秒\n" +
-                "②启动射击需要预热1秒。\n" +
-                "③每第16发为大毁灭菇\n" +
-                "④3.5x3.5范围内有僵尸会害怕自爆并释放毁灭菇效果</color>\n\n" +
-                "<color=#3D1400>呃啊</color>");
+                "②启动射击需要预热1秒\n" +
+                "③每次发射有5%概率发射大毁灭菇，每第16发为大毁灭菇\n" +
+                "④3x3范围内有僵尸会害怕自爆并释放毁灭菇效果</color>\n\n" +
+                "<color=#3D1400>究极毁灭速射机枪胆小菇经营着植物界最大的服装店，“一株植物，根据他的穿着就能看出他的性格或是爱好，我喜欢有个性的植物，他们勇敢又正义。”他曾荣获植物界服装设计绿叶奖，这是所有设计师们梦寐以求的奖项，每当有人问起，他总会说“不知道啊，我去参赛他们给我的～”</color>");
             CustomCore.TypeMgrExtra.LevelPlants.Add(UltimateDoomMinigunScaredy.PlantID, CardLevel.Red);
             CustomCore.AddFusion((int)PlantType.GatlingDoomScaredy, (int)UltimateDoomMinigunScaredy.PlantID, (int)PlantType.ScaredyShroom);
             CustomCore.AddFusion((int)PlantType.GatlingDoomScaredy, (int)PlantType.ScaredyShroom, (int)UltimateDoomMinigunScaredy.PlantID);
+            CustomCore.AddFusion((int)UltimateDoomMinigunScaredy.PlantID, 1933, (int)PlantType.ScaredyShroom);
+            CustomCore.AddFusion((int)UltimateDoomMinigunScaredy.PlantID, (int)PlantType.ScaredyShroom, 1933);
         }
     }
 
@@ -54,12 +57,14 @@ namespace UltimateDoomMinigunScaredy.MelonLoader
             if (plant.thePlantAttackInterval > 0.1f)
             {
                 plant.thePlantAttackInterval -= 0.02f;
-                plant.anim.speed += 0.2f;
+                plant.anim.speed += 0.375f;
             }
+
+            plant.anim.speed = 1 + (0.5f - plant.thePlantAttackInterval) / 0.02f * 0.375f;
 
             plant.doomTimes++;
 
-            if (plant.doomTimes % ((Lawnf.TravelAdvanced((AdvBuff)3)) ? 4 : 16) == 0)
+            if ((plant.doomTimes % ((Lawnf.TravelAdvanced((AdvBuff)3)) ? 4 : 16) == 0) || (UnityEngine.Random.Range(1, 101) <= 5)) 
             {
                 var bullet = CreateBullet.Instance.SetBullet(plant.shoot.position.x, plant.shoot.position.y, plant.thePlantRow, BulletType.Bullet_doom_big,
                     BulletMoveWay.MoveRight);
@@ -72,7 +77,7 @@ namespace UltimateDoomMinigunScaredy.MelonLoader
             {
                 var bullet = CreateBullet.Instance.SetBullet(plant.shoot.position.x, plant.shoot.position.y, plant.thePlantRow, BulletType.Bullet_doom,
                     BulletMoveWay.MoveRight);
-                bullet.Damage = plant.attackDamage * 6;
+                bullet.Damage = plant.attackDamage;
                 bullet.normalSpeed *= 2;
             }
 
@@ -91,9 +96,28 @@ namespace UltimateDoomMinigunScaredy.MelonLoader
                 __instance.anim.SetBool("shooting", __result);
                 if (!__result)
                 {
-                    __instance.thePlantAttackInterval = 0.5f;
                     __instance.anim.speed = 1f;
                 }
+                if (Lawnf.TravelAdvanced(2) && __result)
+                    __instance.anim.Play("shooting");
+                var clipInfo = __instance.anim.GetCurrentAnimatorClipInfo(1);
+                if (clipInfo.Length > 0 && clipInfo[0].clip.name == "shooting" && __instance.thePlantAttackInterval <= 0.1f)
+                    __instance.anim.speed = 2f;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(CreatePlant), nameof(CreatePlant.CheckMix))]
+    public static class CreatePlant_CheckMix_Patch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(CreatePlant __instance, ref GameObject __result)
+        {
+            if (__result != null && __result.GetComponent<Plant>().thePlantType == PlantType.GatlingDoomScaredy && UnityEngine.Random.Range(0, 100) <= 1)
+            {
+                var plant = __result.GetComponent<Plant>();
+                __instance.SetPlant(plant.thePlantColumn, plant.thePlantRow, UltimateDoomMinigunScaredy.PlantID, null, default, true);
+                plant.Die();
             }
         }
     }

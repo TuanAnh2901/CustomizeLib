@@ -23,7 +23,7 @@ namespace PuffFireSniperPeaBepInEx
                 {
                     ((int)PlantType.SmallPuff, (int)PlantType.FireSniper),
                     (1908, (int)PlantType.Jalapeno)
-                }, 3f, 0f, 300, 300, 0f, 725);
+                }, 3f, 0f, 300, 300, 7.5f, 725);
             CustomCore.AddPlantAlmanacStrings(PuffFireSniperPea.PlantID, "火焰小喷菇狙击豌豆(" + PuffFireSniperPea.PlantID + ")", "定期狙击一只僵尸，造成高额伤害并施加红温状态。\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>伤害：</color><color=red>300/3秒</color>\n<color=#3D1400>特点：</color><color=red>同火焰狙击射手。</color>\n<color=#3D1400>融合配方：</color><color=red>小喷菇（底座）+火焰狙击射手</color>\n\n<color=#3D1400>冰原最重要的是什么，那当然是火了！可惜隔壁那位冒失的家伙一不小心就把营地整的一团糟，这时候得请一位专业人士来帮忙了。“你是说，我的狙击任务就只是帮忙点营地的火堆？”火焰狙击小喷菇气愤的问道。</color>");
             CustomCore.TypeMgrExtra.IsPuff.Add((PlantType)PuffFireSniperPea.PlantID);
             CustomCore.TypeMgrExtra.IsFirePlant.Add((PlantType)PuffFireSniperPea.PlantID);

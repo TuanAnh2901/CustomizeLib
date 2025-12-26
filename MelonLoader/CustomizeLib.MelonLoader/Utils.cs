@@ -758,16 +758,6 @@ namespace CustomizeLib.MelonLoader
             //     }
             // }
         }
-
-        public static Il2CppSystem.Collections.Generic.List<T> ToIl2CppList<T>(this List<T> list)
-        {
-            Il2CppSystem.Collections.Generic.List<T> newList = new();
-            foreach (T t in list)
-            {
-                newList.Add(t);
-            }
-            return newList;
-        }
     }
 
     public static class Utils

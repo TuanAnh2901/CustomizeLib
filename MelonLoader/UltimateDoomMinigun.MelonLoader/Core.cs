@@ -28,14 +28,17 @@ namespace UltimateDoomMinigun.MelonLoader
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
                 "<color=#3D1400>使用条件：</color><color=red>①融合或转化毁灭机枪射手时有2%概率变异\n" +
                 "②神秘模式\n" +
-                "*可使用豌豆射手切回毁灭机枪射手</color>\n" + 
-                "<color=#3D1400>伤害：</color><color=red>300x6/0.5秒，1800</color>\n" +
-                "<color=#3D1400>特点：</color><color=red>①每次发射有5%概率改为大毁灭菇子弹，每第16发必改为大毁灭菇子弹，大毁灭菇伤害1800，半径3格无衰减溅射。\n" +
+                "*可使用豌豆射手切回毁灭机枪射手\n" +
+                "*可使用胆小菇切换究极速射毁灭机枪胆小菇</color>\n" +
+                "<color=#3D1400>伤害：</color><color=red>300x6/0.5秒</color>\n" +
+                "<color=#3D1400>特点：</color><color=red>①每次发射有5%概率发射大毁灭菇子弹，每第16发发射伤害1800的大毁灭菇子弹，造成半径3格无衰减溅射。\n" +
                 "②启动射击需要预热1.5秒。</color>\n\n" +
                 "<color=#3D1400>“你问我成功的秘卷是什么？是看到机会就立马抓住的反应，是成功路上不断披荆斩棘的勇气，是成功后与他人分享到喜悦！”究极速射毁灭菇机枪射手整理了下衣领，接着说道，“我们都曾遇到过困境，经历过迷惘，那是什么带领我们击败困境穿越迷惘的呢？是曾经的自己，所以为了感谢曾经的自己，好好对待当下的每一天吧。哦对了！别感冒！”</color>");
             CustomCore.TypeMgrExtra.LevelPlants.Add((PlantType)UltimateDoomMinigun.PlantID, CardLevel.Red);
             CustomCore.AddFusion((int)PlantType.DoomGatling, UltimateDoomMinigun.PlantID, (int)PlantType.Peashooter);
             CustomCore.AddFusion((int)PlantType.DoomGatling, (int)PlantType.Peashooter, UltimateDoomMinigun.PlantID);
+            CustomCore.AddFusion((int)UltimateDoomMinigun.PlantID, 1953, (int)PlantType.Peashooter);
+            CustomCore.AddFusion((int)UltimateDoomMinigun.PlantID, (int)PlantType.Peashooter, 1953);
         }
     }
 

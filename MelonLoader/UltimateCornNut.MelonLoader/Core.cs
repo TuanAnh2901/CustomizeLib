@@ -18,7 +18,7 @@ namespace UltimateCornNut.MelonLoader
             var ab = CustomCore.GetAssetBundle(MelonAssembly.Assembly, "ultimatecornnut");
             CustomCore.RegisterCustomPlant<UltimatePortalNut, UltimateCornNut>(UltimateCornNut.PlantID, ab.GetAsset<GameObject>("UltimateCornNutPrefab"),
                 ab.GetAsset<GameObject>("UltimateCornNutPreview"), new List<(int, int)> { }, 0f, 0f, 0, 16000, 90f, 750);
-            CustomCore.AddPlantAlmanacStrings(UltimateCornNut.PlantID, $"究级超时空黄油坚果({UltimateCornNut.PlantID})",
+            CustomCore.AddPlantAlmanacStrings(UltimateCornNut.PlantID, $"究级超时空黄油坚果",
                 "回溯和免疫伤害能力极强的超时空黄油坚果\n" +
                 "<color=#0000FF>究极超时空坚果的限定形态</color>\n\n" +
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
@@ -36,6 +36,8 @@ namespace UltimateCornNut.MelonLoader
             CustomCore.AddUltimatePlant((PlantType)UltimateCornNut.PlantID);
             CustomCore.AddFusion((int)PlantType.UltimatePortalNut, UltimateCornNut.PlantID, (int)PlantType.WallNut);
             CustomCore.AddFusion((int)PlantType.UltimatePortalNut, (int)PlantType.WallNut, UltimateCornNut.PlantID);
+            foreach (var item in Enum.GetValues<BucketType>())
+                CustomCore.RegisterCustomUseItemOnPlantEvent((PlantType)UltimateCornNut.PlantID, item, (p) => p.Recover(500f));
         }
     }
 

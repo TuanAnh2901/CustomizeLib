@@ -22,7 +22,7 @@ namespace UltimateCherryTorch.MelonLoader
                     ((int)PlantType.NuclearDoomCherry, (int)PlantType.CherryTorch)
                 }, 0.5f, 0f, 300, 300, 7.5f, 750);
             CustomCore.AddPlantAlmanacStrings((int)UltimateCherryTorch.PlantID,
-                $"终极核爆火炬({(int)UltimateCherryTorch.PlantID})",
+                $"终极核爆火炬",
                 "蕴含着极致核能力量的火炬，经过的特定子弹会引起高能裂变\n\n" +
                 "<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n" +
                 "<color=#3D1400>融合配方：</color><color=red>樱桃火炬+核爆樱桃</color>\n" +
@@ -55,7 +55,7 @@ namespace UltimateCherryTorch.MelonLoader
 
         public void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.gameObject.TryGetComponent<Bullet>(out var bullet) && bullet != null && bullet.torchWood != plant && !bullet.isZombieBullet)
+            if (collision.gameObject.TryGetComponent<Bullet>(out var bullet) && bullet != null && bullet.torchWood != plant && !bullet.fromZombie)
             {
                 if (bullet.theBulletType == BulletType.Bullet_doom || bullet.theBulletType == BulletType.Bullet_doom_big ||
                     bullet.theBulletType == BulletType.Bullet_superCherry || bullet.theBulletType == BulletType.Bullet_cherrySquash || 
@@ -86,7 +86,7 @@ namespace UltimateCherryTorch.MelonLoader
         {
             if (radiation == null)
                 InstantiateRadiation();
-            radiation.liftTimer = 3f;
+            radiation.lifeTimer = 3f;
             if (Lawnf.TravelAdvanced(Buff2))
                 radiation.transform.localScale = new Vector3(7f, 7f, 7f);
             else
@@ -99,7 +99,7 @@ namespace UltimateCherryTorch.MelonLoader
             Radiation.radiation = null;
             radiation = UnityEngine.Object.Instantiate(Resources.Load<GameObject>("plants/cherrybomb/nucleardoomcherry/Radiation"), plant.axis.transform.position, Quaternion.identity, plant.transform).GetComponent<Radiation>();
             Radiation.radiation = origin;
-            radiation.liftTimer = 3f;
+            radiation.lifeTimer = 3f;
             radiation.damage = 400;
             radiation.transform.localScale = new Vector3(4f, 4f, 4f);
             radiation.GetComponent<ParticleSystem>().Simulate(0.02f, true);

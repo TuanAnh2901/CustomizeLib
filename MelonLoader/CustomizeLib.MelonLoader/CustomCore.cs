@@ -6,13 +6,16 @@ using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using Unity.VisualScripting;
+using Unity.VisualScripting.FullSerializer.Internal;
 using UnityEngine;
 
 ///
 ///Credit to likefengzi(https://github.com/likefengzi)(https://space.bilibili.com/237491236)
 ///
 
-[assembly: MelonInfo(typeof(CustomCore), "PVZRHCustomization", "3.0.1", "Infinite75,likefengzi,Salmon", null)]
+[assembly: MelonInfo(typeof(CustomCore), "PVZRHCustomization", "3.2", "Infinite75,likefengzi,Salmon", null)]
 [assembly: MelonGame("LanPiaoPiao", "PlantsVsZombiesRH")]
 [assembly: MelonPlatformDomain(MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP)]
 
@@ -26,6 +29,7 @@ namespace CustomizeLib.MelonLoader
             public static List<ZombieType> BigZombie { get; set; } = [];
             public static List<PlantType> DoubleBoxPlants { get; set; } = [];
             public static List<ZombieType> EliteZombie { get; set; } = [];
+            public static List<ZombieType> DriverZombie { get; set; } = [];
             public static List<PlantType> FlyingPlants { get; set; } = [];
             public static List<PlantType> IsCaltrop { get; set; } = [];
             public static List<PlantType> IsFirePlant { get; set; } = [];
@@ -130,8 +134,13 @@ namespace CustomizeLib.MelonLoader
         /// <param name="id">植物id</param>
         /// <param name="name">植物名称</param>
         /// <param name="description">植物介绍</param>
-        public static void AddPlantAlmanacStrings(int id, string name, string description) =>
-            PlantsAlmanac.Add((PlantType)id, (name, description));
+        public static void AddPlantAlmanacStrings(int id, string name, string description)
+        {
+            String iName = name;
+            if (!Regex.Match(name, @"\(\d+\)$").Success)
+                iName = $"{name}({id})";
+            PlantsAlmanac.Add((PlantType)id, (iName, description));
+        }
 
         /// <summary>
         /// 添加僵尸图鉴
@@ -139,8 +148,10 @@ namespace CustomizeLib.MelonLoader
         /// <param name="id">僵尸id</param>
         /// <param name="name">僵尸名称</param>
         /// <param name="description">僵尸介绍</param>
-        public static void AddZombieAlmanacStrings(int id, string name, string description) =>
+        public static void AddZombieAlmanacStrings(int id, string name, string description)
+        {
             ZombiesAlmanac.Add((ZombieType)id, (name, description));
+        }
 
         /// <summary>
         /// 获取嵌入dll里的ab包
@@ -292,7 +303,7 @@ namespace CustomizeLib.MelonLoader
         /// <param name="buffID">指定词条ID(不自动分配)</param>
         /// <returns></returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string color, PlantType plantType = PlantType.Nothing, int buffID = -1, BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuffAll(text, buffType, canUnlock, cost, color, plantType, 1, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+            string color, PlantType plantType = PlantType.Nothing, int buffID = -1, BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
 
         /// <summary>
         /// 注册自定义词条
@@ -309,7 +320,7 @@ namespace CustomizeLib.MelonLoader
         /// <returns></returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost, int level, 
             string color, PlantType plantType = PlantType.Nothing, int buffID = -1,
-            BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuffAll(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+            BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
 
         /// <summary>
         /// 注册自定义词条
@@ -325,8 +336,8 @@ namespace CustomizeLib.MelonLoader
         /// <param name="zombieType">僵尸类型(仅词条类型为僵尸时使用)</param>
         /// <param name="buffID">指定词条ID(不自动分配)</param>
         /// <returns>分到的词条id</returns>
-        public static int RegisterCustomBuffAll(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing, int level = 1,
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string? color, PlantType plantType, int level,
             TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day, ZombieType zombieType = ZombieType.NormalZombie,
             int buffID = -1)
         {
@@ -339,7 +350,7 @@ namespace CustomizeLib.MelonLoader
                             BuffArrayCount.Item1 = TravelMgr.advancedBuffs.Count;
                         int i = TravelMgr.advancedBuffs.Count;
                         if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, buffID), i);
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
                         TravelMgr.advancedBuffs.Add(i, text);
                         if (level != 1)
@@ -354,7 +365,7 @@ namespace CustomizeLib.MelonLoader
                             BuffArrayCount.Item2 = TravelMgr.ultimateBuffs.Count;
                         int i = TravelMgr.ultimateBuffs.Count;
                         if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, buffID), i);
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
                         TravelMgr.ultimateBuffs.Add(i, text);
                         if (level != 1)
@@ -369,7 +380,7 @@ namespace CustomizeLib.MelonLoader
                             BuffArrayCount.Item3 = TravelMgr.debuffs.Count;
                         int i = TravelMgr.debuffs.Count;
                         if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, buffID), i);
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
                         CustomDebuffs.Add(i, (text, zombieType));
                         TravelMgr.debuffs.Add(i, text);
                         TravelMgr.debuffIconPairs.Add(i, zombieType);
@@ -611,7 +622,33 @@ namespace CustomizeLib.MelonLoader
             if (!CustomPlantsSkin.ContainsKey((PlantType)id))
             {
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = new()
+                        {
+                            attackDamage = attackDamage,
+                            field_Public_PlantType_0 = (PlantType)id,
+                            //攻击间隔
+                            field_Public_Single_0 = attackInterval,
+                            //生产间隔
+                            field_Public_Single_1 = produceInterval,
+                            //最大HP
+                            field_Public_Int32_0 = maxHealth,
+                            //种植冷却
+                            field_Public_Single_2 = cd,
+                            //花费阳光
+                            field_Public_Int32_1 = sun
+                        }
+                    }
+                });
+            }
+            else
+            {
+                CustomPlantsSkin[(PlantType)id].Add(new CustomPlantData()
                 {
                     ID = id,
                     Prefab = prefab,
@@ -632,15 +669,11 @@ namespace CustomizeLib.MelonLoader
                         field_Public_Int32_1 = sun
                     }
                 });
-                foreach (var f in fusions)
-                {
-                    //添加融合配方
-                    AddFusion(id, f.Item1, f.Item2);
-                }
             }
-            else
+            foreach (var f in fusions)
             {
-                MelonLogger.Msg($"Duplicate Plant ID: {id}");
+                //添加融合配方
+                AddFusion(id, f.Item1, f.Item2);
             }
         }
 
@@ -671,9 +704,34 @@ namespace CustomizeLib.MelonLoader
             CustomPlantsSkinActive.Add((PlantType)id, false);
             if (!CustomPlantsSkin.ContainsKey((PlantType)id))
             {
-                //植物id不重复才进行注册
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = new()
+                        {
+                            attackDamage = attackDamage,
+                            field_Public_PlantType_0 = (PlantType)id,
+                            //攻击间隔
+                            field_Public_Single_0 = attackInterval,
+                            //生产间隔
+                            field_Public_Single_1 = produceInterval,
+                            //最大HP
+                            field_Public_Int32_0 = maxHealth,
+                            //种植冷却
+                            field_Public_Single_2 = cd,
+                            //花费阳光
+                            field_Public_Int32_1 = sun
+                        }
+                    }
+                });
+            }
+            else
+            {
+                CustomPlantsSkin[(PlantType)id].Add(new CustomPlantData()
                 {
                     ID = id,
                     Prefab = prefab,
@@ -681,6 +739,7 @@ namespace CustomizeLib.MelonLoader
                     PlantData = new()
                     {
                         attackDamage = attackDamage,
+                        field_Public_PlantType_0 = (PlantType)id,
                         //攻击间隔
                         field_Public_Single_0 = attackInterval,
                         //生产间隔
@@ -693,15 +752,11 @@ namespace CustomizeLib.MelonLoader
                         field_Public_Int32_1 = sun
                     }
                 });
-                foreach (var f in fusions)
-                {
-                    AddFusion(id, f.Item1, f.Item2);
-                }
             }
-            else
+            foreach (var f in fusions)
             {
                 //添加融合配方
-                MelonLogger.Msg($"Duplicate Plant ID: {id}");
+                AddFusion(id, f.Item1, f.Item2);
             }
         }
 
@@ -727,17 +782,27 @@ namespace CustomizeLib.MelonLoader
             {
                 //植物id不重复才进行注册
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
-                {
-                    ID = id,
-                    Prefab = prefab,
-                    Preview = preview,
-                    PlantData = null
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = null
+                    }
                 });
             }
             else
             {
-                MelonLogger.Msg($"Duplicate Plant ID: {id}");
+                CustomPlantsSkin[(PlantType)id].Add(
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = null
+                    }
+                );
             }
         }
 
@@ -899,6 +964,7 @@ namespace CustomizeLib.MelonLoader
         /// <param name="id">植物id</param>
         /// <param name="cost">开大花费</param>
         /// <param name="skill">要运行的大招函数</param>
+        /// <param name="defaultCost">默认开大花费</param>
         public static void RegisterSuperSkill([NotNull] int id, [NotNull] Func<Plant, int> cost,
             [NotNull] Action<Plant> skill, [NotNull] int defaultCost = 1000) => SuperSkills.Add((PlantType)id, (cost, skill, defaultCost));
 
@@ -907,6 +973,19 @@ namespace CustomizeLib.MelonLoader
         /// </summary>
         /// <param name="plantType">要设为究极植物的植物类型</param>
         public static void AddUltimatePlant([NotNull] PlantType plantType) => CustomUltimatePlants.Add(plantType);
+
+        /// <summary>
+        /// 注册自定义弱究植物
+        /// </summary>
+        /// <param name="plantType">植物类型</param>
+        public static void RegisterCustomWeakUltimatePlant([NotNull] PlantType plantType)
+        {
+            TravelMgr.allWeakUltimatePlants.Add(plantType);
+            if (!CustomWeakUltimatePlants.Contains(plantType))
+                CustomWeakUltimatePlants.Add(plantType);
+            else
+                MelonLogger.Error($"Duplicate weak ultimate type: {plantType}");
+        }
 
         /// <summary>
         /// 注册自定义融合洋芋配方
@@ -1051,11 +1130,6 @@ namespace CustomizeLib.MelonLoader
             GameObject ccore = new("CustomizeLib by Infinite75");
             ccore.AddComponent<CustomizeLib>().CustomCore = this;
             UnityEngine.Object.DontDestroyOnLoad(ccore);
-
-            RegisterCustomClickCardOnPlantEvent(PlantType.SunFlower, PlantType.Cornpult, (p) =>
-            {
-                MelonLogger.Msg(p.thePlantType);
-            });
         }
 
         /// <summary>
@@ -1101,7 +1175,7 @@ namespace CustomizeLib.MelonLoader
         /// <summary>
         /// 自定义植物皮肤列表
         /// </summary>
-        public static Dictionary<PlantType, CustomPlantData> CustomPlantsSkin { get; set; } = [];
+        public static Dictionary<PlantType, List<CustomPlantData>> CustomPlantsSkin { get; set; } = [];
 
         /*
         /// <summary>
@@ -1244,6 +1318,11 @@ namespace CustomizeLib.MelonLoader
         /// 注册二创词条前的数组长度
         /// </summary>
         public static (int, int, int) BuffArrayCount = (-1, -1, -1);
+
+        /// <summary>
+        /// 自定义弱究列表
+        /// </summary>
+        public static List<PlantType> CustomWeakUltimatePlants { get; set; } = [];
 
         /*/// <summary>
         /// 注册时缓存皮肤，加载时注册

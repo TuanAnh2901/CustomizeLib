@@ -47,6 +47,15 @@ namespace QuickJacsonDriver.MelonLoader
             if (zombie.isPreview)
                 gameObject.transform.FindChild("Trail_1").gameObject.SetActive(false);
         }
+
+        /*public void OnTriggerEnter2D(Collider2D collider)
+        {
+            if (collider != null && collider.gameObject != null && collider.gameObject.TryGetComponent<Plant>(out var plant) && plant != null)
+            {
+                if (TypeMgr.Is)
+            }
+        }*/
+
         public void Update()
         {
             if (GameAPP.theGameStatus == GameStatus.InGame && zombie is not null)
@@ -123,6 +132,21 @@ namespace QuickJacsonDriver.MelonLoader
                     CreateZombie.Instance.SetZombieWithMindControl(__instance.theZombieRow, ZombieType.QuickJacksonZombie, __instance.axis.transform.position.x, false);
                     CreateZombie.Instance.SetZombieWithMindControl(__instance.theZombieRow, ZombieType.Driver_b, __instance.axis.transform.position.x, false);
                 }
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(TypeMgr), nameof(TypeMgr.IsDriverZombie))]
+    public static class TypeMgr_IsDriverZombie_Patch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(ref ZombieType theZombieType, ref bool __result)
+        {
+            if ((int)theZombieType == QuickJacksonDriver.ZombieID)
+            {
+                __result = true;
                 return false;
             }
             return true;

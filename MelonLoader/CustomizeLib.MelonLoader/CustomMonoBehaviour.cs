@@ -213,6 +213,47 @@ public class CheckCardState : MonoBehaviour
 }
 
 /*[RegisterTypeInIl2Cpp]
+public class AlmanacCustom : MonoBehaviour
+{
+    public AlmanacPlantMenu? almanac = null;
+
+    public void Update()
+    {
+        //判断鼠标按下
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
+
+            //击中二创植物Button
+            if (hit.collider != null && hit.collider.gameObject == gameObject && hit.collider.gameObject.name == "LookCustom")
+            {
+                
+            }
+        }
+
+        //设置鼠标特效
+        if (gameObject != null)
+        {
+            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
+
+            if (hit.collider != null && hit.collider.gameObject == gameObject)
+            {
+                CursorChange.SetClickCursor();
+            }
+        }
+    }
+
+    public void LookCustom()
+    {
+        if (almanac == null) return;
+        Func<PlantType, bool> func = (plantType) => CustomCore.CustomPlantTypes.Contains(plantType);
+        almanac.ShowPlants(func);
+    }
+}*/
+
+/*[RegisterTypeInIl2Cpp]
 public class CustomMouseBehaviour : MonoBehaviour
 {
     public void Update()
