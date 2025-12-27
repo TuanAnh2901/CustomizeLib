@@ -13,7 +13,7 @@ Release每个大版本更新一次，有想弄最新的可以自己编译一下�
 
 # PVZRHCustomization
 植物大战僵尸融合版二创植物与僵尸 by [@Infinite75](https://space.bilibili.com/672619350)    
-适配游戏版本2.7      
+适配游戏版本3.0.1      
 已构建版本的链接在Release中    
 CustomizeLib和我的模组未来想使用和适配请自便，在遵守开源协议的前提下默认授权
 

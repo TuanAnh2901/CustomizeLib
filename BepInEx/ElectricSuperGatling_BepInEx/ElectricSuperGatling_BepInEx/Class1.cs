@@ -29,8 +29,9 @@ namespace ElectricSuperGatling_BepInEx
                     ((int)PlantType.SuperGatling, (int)PlantType.ElectricOnion),
                     ((int)PlantType.ElectricOnion, (int)PlantType.SuperGatling)
                 },
-                1.5f, 0f, 20, 300, 0f, 825
+                1.5f, 0f, 20, 300, 7.5f, 825
             );
+            CustomCore.AddUltimatePlant((PlantType)ElectricSuperGatling.PlantID);
             CustomCore.AddPlantAlmanacStrings(ElectricSuperGatling.PlantID,
                 $"超级电能机枪射手({ElectricSuperGatling.PlantID})",
                 "一次发射六颗电能豌豆，有概率一次性发射大量电能豌豆\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>伤害：</color><color=red>20/0.14秒;\n20×3/0.14秒（大招）</color>\n<color=#3D1400>特点：</color><color=red>攻击有3%概率散射大量电能豌豆，持续5秒。子弹每攻击到僵尸49次对附近每有僵尸造成伤害为100点的爆炸伤害</color>\n<color=#3D1400>融合配方：</color><color=red>超级机枪射手+闪电洋葱</color>\n\n<color=#3D1400>“你是电，你是光，你是唯一的神话，我只爱你，You are my super star!”超级电能机枪豌豆总是把这句歌词挂在嘴边，电光火石间，僵尸们就因触碰114514伏的高压电流而死。</color>"
@@ -80,7 +81,7 @@ namespace ElectricSuperGatling_BepInEx
                         {
                             if (z is not null && !z.IsDestroyed() && z.TryGetComponent<Zombie>(out var zombie) && zombie is not null && !zombie.isMindControlled && !zombie.IsDestroyed() && zombie.theStatus != ZombieStatus.Miner_digging)
                             {
-                                AoeDamage.BigBomb(zombie.axis.transform.position, 1.1f, bullet.zombieLayer, bullet.theBulletRow, 100);
+                                AoeDamage.BigBomb(zombie.axis.transform.position, 1.1f, bullet.zombieLayer, bullet.theBulletRow, 100, PlantType.Nothing);
                                 // GameAPP.board.GetComponent<Board>().SetDoom(0, 0, false, false, zombie.axis.transform.position, 1800, 0, null);
                                 GameAPP.PlaySound(UnityEngine.Random.RandomRange(0, 3));
                             }

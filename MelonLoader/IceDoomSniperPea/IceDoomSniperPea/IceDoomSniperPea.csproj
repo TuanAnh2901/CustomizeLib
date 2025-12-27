@@ -21,9 +21,6 @@
 		<Reference Include="Assembly-CSharp">
 		  <HintPath>F:\PVZRH_Melon\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
 		</Reference>
-		<Reference Include="CustomizeLib.MelonLoader">
-		  <HintPath>F:\PVZRH_Melon\Mods\CustomizeLib.MelonLoader.dll</HintPath>
-		</Reference>
 		<Reference Include="Il2CppMono.Security">
 			<HintPath>F:\PVZRH_Melon\MelonLoader\Il2CppAssemblies\Il2CppMono.Security.dll</HintPath>
 		</Reference>
@@ -317,6 +314,10 @@
 
 	<ItemGroup>
 	  <EmbeddedResource Include="icedoomsniperpea" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\CustomizeLib.MelonLoader\CustomizeLib.MelonLoader.csproj" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

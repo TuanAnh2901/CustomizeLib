@@ -3,16 +3,19 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>disable</Nullable>
-		<RootNamespace>PuffUltimateGatling</RootNamespace>
+		<RootNamespace>ObsidianThreeGatling.MelonLoader</RootNamespace>
 		<LangVersion>default</LangVersion>
 		<IsPackable>false</IsPackable>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<AssemblyName>PuffUltimateGatling</AssemblyName>
+		<AssemblyName>ObsidianThreeGatling.MelonLoader</AssemblyName>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="obsidianthreegatling" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">
@@ -316,7 +319,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\MelonLoader\CustomizeLib.MelonLoader\CustomizeLib.MelonLoader.csproj" />
+	  <EmbeddedResource Include="obsidianthreegatling" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CustomizeLib.MelonLoader\CustomizeLib.MelonLoader.csproj" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -1,10 +1,16 @@
-﻿using Il2Cpp;
+﻿// #define DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF // 启用多级词条
+
+using Il2Cpp;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
+using System.Reflection;
 using Unity.VisualScripting;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
+using static UnityEngine.GraphicsBuffer;
 
 namespace CustomizeLib.MelonLoader
 {
@@ -59,6 +65,29 @@ namespace CustomizeLib.MelonLoader
         public PlantDataLoader.PlantData_? PlantData { get; set; }
         public GameObject Prefab { get; set; }
         public GameObject Preview { get; set; }
+    }
+
+    public struct CustomBulletData
+    {
+        public BulletType ID { get; set; }
+        public GameObject Prefab { get; set; }
+    }
+
+    public struct CustomPlantSaveData
+    {
+        public CustomPlantSaveData() { }
+
+        public int thePlantColumn = -1;
+        public int thePlantRow = -1;
+        public int thePlantType = -1;
+        public List<CustomPlantEndlessData> data { get; set; } = [];
+    }
+
+    public struct CustomPlantEndlessData
+    {
+        public CustomPlantEndlessData() { }
+        public String Name { get; set; } = "Name";
+        public object? Value { get; set; } = null;
     }
 
     /// <summary>
@@ -168,25 +197,14 @@ namespace CustomizeLib.MelonLoader
             }
         }
 
-        //递归，找shoot，但是一些奇怪的植物不行
         public static void FindShoot(this Plant plant, Transform parent)
         {
-            // 遍历当前对象的所有组件
-            Component[] components = parent.GetComponents<Component>();
-            foreach (Component component in components)
-            {
-                if (component.name == "Shoot" || component.name == "Shoot1")
-                {
-                    plant.shoot = component.transform;
-                }
+            String name = parent.name.ToLower();
+            if (name == "shoot" || name == "shoot1")
+                plant.shoot = parent;
+            if (name == "shoot2")
+                plant.shoot2 = parent;
 
-                if (component.name == "Shoot2")
-                {
-                    plant.shoot2 = component.transform;
-                }
-            }
-
-            // 递归遍历所有子对象
             for (int i = 0; i < parent.childCount; i++)
             {
                 plant.FindShoot(parent.GetChild(i));
@@ -214,6 +232,19 @@ namespace CustomizeLib.MelonLoader
             throw new ArgumentException($"Could not find {name} from {ab.name}");
         }
 
+        /// <summary>
+        /// 获取ab包里所有的资源的名字
+        /// </summary>
+        /// <param name="ab">ab包对象</param>
+        /// <returns></returns>
+        public static String[] GetAssetsNames(this AssetBundle ab)
+        {
+            List<String> list = new();
+            foreach (var ase in ab.LoadAllAssetsAsync().allAssets)
+                list.Add(ase.name);
+            return list.ToArray();
+        }
+
         public static T GetRandomItem<T>(this IList<T> list) => list[UnityEngine.Random.RandomRangeInt(0, list.Count)];
 
         /// <summary>
@@ -232,6 +263,14 @@ namespace CustomizeLib.MelonLoader
         /// <returns></returns>
         public static bool ObjectExist<T>(this Board board) =>
             board.GameObject().transform.GetComponentsInChildren<T>().Length > 0;
+
+        /// <summary>
+        /// 将Texture2D转换为Sprite
+        /// </summary>
+        /// <param name="texture2D">Texture2D对象</param>
+        /// <returns>Sprite对象</returns>
+        public static Sprite ToSprite(this Texture2D texture2D) =>
+            Sprite.Create(texture2D, new Rect(0, 0, texture2D.width, texture2D.height), new Vector2(0.5f, 0.5f));
 
         /// <summary>
         /// 交换换皮肤植物特性
@@ -719,16 +758,6 @@ namespace CustomizeLib.MelonLoader
             //     }
             // }
         }
-
-        public static Il2CppSystem.Collections.Generic.List<T> ToIl2CppList<T>(this List<T> list)
-        {
-            Il2CppSystem.Collections.Generic.List<T> newList = new();
-            foreach (T t in list)
-            {
-                newList.Add(t);
-            }
-            return newList;
-        }
     }
 
     public static class Utils
@@ -753,6 +782,8 @@ namespace CustomizeLib.MelonLoader
 
         public static bool IsNotNull<T>(this T obj) => obj is not null;
 
+        public static int ToInt(this bool value) => value ? 1 : 0;
+
         public static LevelType CustomLevelType => (LevelType)66;
 
         /// <summary>
@@ -765,6 +796,7 @@ namespace CustomizeLib.MelonLoader
             {
                 GameObject? MyCard = null;
                 MyCard = InGameUI.Instance.SeedBank.transform.parent.FindChild("Bottom/SeedLibrary/Grid/ColorfulCards/Page1/CattailGirl").gameObject;
+                #region disable
                 /*int value = 0;
                 GameObject? MyPage = null;
                 try
@@ -778,6 +810,7 @@ namespace CustomizeLib.MelonLoader
                     SelectCustomPlants.GetCardGUI(ref MyPage, ref MyCard, ref value);
                 if (MyCard == null)
                     return null;*/
+                #endregion
                 return MyCard;
             }
             else if (Board.Instance is not null && Board.Instance.isIZ)
@@ -785,6 +818,7 @@ namespace CustomizeLib.MelonLoader
 
                 GameObject? MyCard = null;
                 MyCard = IZBottomMenu.Instance.plantLibrary.transform.FindChild("Grid/ColorfulCards/Page1/CattailGirl").gameObject;
+                #region disable
                 /*int value = 0;
                 GameObject? MyPage = null;
                 try
@@ -799,6 +833,7 @@ namespace CustomizeLib.MelonLoader
                     SelectCustomPlants.GetCardGUI(ref MyPage, ref MyCard, ref value);
                 if (MyCard == null)
                     return null;*/
+                #endregion
                 return MyCard;
             }
             return null;
@@ -857,6 +892,78 @@ namespace CustomizeLib.MelonLoader
                 return IZBottomMenu.Instance.plantLibrary.transform.FindChild("Grid/Pages/Page1");
             }
             return null;
+        }
+
+#if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
+        #region 多级词条相关方法
+        /// <summary>
+        /// 获取自定义词条等级
+        /// </summary>
+        /// <param name="buffType">词条类型</param>
+        /// <param name="returnID">注册词条时返回的ID</param>
+        /// <returns>自定义词条等级</returns>
+        public static int TravelCustomLevel(BuffType buffType, int returnID)
+        {
+            if (TravelMgr.Instance is null)
+                return 0;
+            var result = IsMultiLevelBuff(buffType, returnID);
+            foreach (var value in result.Item2)
+            {
+                int index = (int)CustomCore.variables[0] + value.Item2;
+                Il2CppStructArray<int> upgrades = TravelMgr.Instance.ultimateUpgrades;
+                return upgrades[index];
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 自定义词条是否是多级词条
+        /// </summary>
+        /// <param name="buffType">词条类型</param>
+        /// <param name="id">对应的数组的ID（索引），即注册词条是返回的ID</param>
+        /// <returns>Item1: 是否是多级词条, Item2: 符合条件的所有词条的列表</returns>
+        public static (bool, List<(BuffType, int, int)>) IsMultiLevelBuff(BuffType buffType, int returnID)
+        {
+            var list = CustomCore.CustomBuffsLevel.
+                    Where(kvp => kvp.Key.Item1 == buffType && kvp.Key.Item3 == returnID && kvp.Value != 1).
+                    Select(kvp => kvp.Key).
+                    ToList();
+            return (list.Count > 0, list);
+        }
+    #endregion
+#endif
+
+
+        /// <summary>
+        /// 自定义词条是否是多级词条
+        /// </summary>
+        /// <param name="buffType">词条类型</param>
+        /// <param name="returnID">对应的数组的ID（索引），即注册词条是返回的ID</param>
+        /// <returns>Item1: 是否是多级词条, Item2: 在CustomBuffsLevel中的索引</returns>
+        public static (bool, int) IsMultiLevelBuff(BuffType buffType, int returnID)
+        {
+            var list = CustomCore.CustomBuffsLevel.Where(kvp => kvp.Key.Item1 == buffType && kvp.Key.Item2 == returnID).ToList();
+            if (list.Count > 0)
+            {
+                var index = list[0].Value.Item1;
+                return (list.Count > 0, index);
+            }
+            return (false, -1);
+        }
+
+        public static int TravelCustomBuffLevel(BuffType buffType, int returnID)
+        {
+            var result = IsMultiLevelBuff(buffType, returnID);
+            if (result.Item1)
+            {
+                if (TravelMgr.Instance is null)
+                    return 0;
+                var array = (int[])TravelMgr.Instance.GetData("CustomBuffsLevel");
+                if (array is null)
+                    return 0;
+                return array[result.Item2];
+            }
+            return 0;
         }
     }
 

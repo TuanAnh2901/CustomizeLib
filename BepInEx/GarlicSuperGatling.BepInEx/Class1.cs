@@ -10,7 +10,7 @@ using CustomizeLib.BepInEx;
 
 namespace GarlicSuperGatling.BepInEx
 {
-    [BepInPlugin("salmon.garlicsupergatling", "IceDoomCherryJalapeno", "1.0")]
+    [BepInPlugin("salmon.garlicsupergatling", "GarlicSuperGatling", "1.0")]
     public class Core : BasePlugin//177
     {
         public static int ParticleID = 500;
@@ -31,6 +31,7 @@ namespace GarlicSuperGatling.BepInEx
                 }, 1.5f, 0f, 40, 300, 7.5f, 650);
             CustomCore.AddPlantAlmanacStrings(GarlicSuperGatling.PlantID, $"超级蒜机枪射手({GarlicSuperGatling.PlantID})",
                 "一次发射六颗蒜豌豆，有概率一次性发射大量蒜豌豆。\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>伤害：</color><color=red>40x6/1.5秒</color>\n<color=#3D1400>特点：</color><color=red>攻击有3%概率散射大量蒜豌豆，持续5秒。直击和爆炸获得蒜值增伤后赋予1点蒜值，命中陷入中毒的僵尸有10%概率造成（子弹伤害+僵尸蒜值x40）伤害的大蒜爆炸，并对周围的僵尸陷入中毒效果。</color>\n<color=#3D1400>词条1：</color><color=red>蒜毒骤发：赋予蒜值会施加中毒。每层蒜值增伤提升至80，大蒜爆炸概率提升至25%，蒜爆蒜值增伤提升至400。</color>\n\n<color=#3D1400>永远不要招惹一位退役的老兵，尤其是特立独行的家伙。虽然不知道是怎么传播开来的，但是招惹它的僵尸基本都后悔了。</color>");
+            CustomCore.AddUltimatePlant((PlantType)GarlicSuperGatling.PlantID);
         }
     }
 

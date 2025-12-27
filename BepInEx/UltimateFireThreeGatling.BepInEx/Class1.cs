@@ -27,9 +27,10 @@ namespace UltimateFireThreeGatling.BepInEx
                     (AshThreeGatling.PlantID, (int)PlantType.Jalapeno)
                 }, 1.5f, 0f, 160, 300, 0f, 1250);
             CustomCore.TypeMgrExtra.IsFirePlant.Add((PlantType)UltimateFireThreeGatling.PlantID);
-            CustomCore.AddPlantAlmanacStrings(UltimateFireThreeGatling.PlantID, $"浴火三线超级机枪射手({UltimateFireThreeGatling.PlantID})",
+            CustomCore.AddPlantAlmanacStrings(UltimateFireThreeGatling.PlantID, $"浴火三线超级机枪射手",
                 "向三行发射浴火豌豆的超级机枪射手。\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>融合配方：</color><color=red>超级机枪射手（底座）+浴火三线射手</color>\n<color=#3D1400>伤害：</color><color=red>(160x6)x3/1.5秒</color>\n<color=#3D1400>特点：</color><color=red>拥有浴火三线射手的全部特性。每次攻击有2%概率触发大招，每0.02秒向三行各发射1个伤害三倍伤害的浴火豌豆</color>\n<color=#3D1400>词条1：</color><color=red>怒火攻心：火焰豌豆会施加红温状态，红温增伤增加至150%</color>\n<color=#3D1400>词条2：</color><color=red>百步穿杨：欲火豌豆能无限穿透，且附带红温爆炸伤害</color>\n\n<color=#3D1400>“我们来自未来，也来自过去，并存在于现在”浴火三线超级机枪射手的三个脑袋分别代表过去现在和未来，过去放眼未来，现在不被过去约束，未来不再重蹈覆辙，浴火三线超级机枪射手穿越到过去和未来，“我们找遍了所有的未来，只有一个未来是和平的，温暖的，就是我们正在进行，将要到达的未来”，他们异口同声，“就算是没有我们的未来，也要保持一颗热忱的心，就像火焰一样，温暖”</color>");
-
+            CustomCore.TypeMgrExtra.LevelPlants.Add((PlantType)UltimateFireThreeGatling.PlantID, CardLevel.Red);
+            CustomCore.AddUltimatePlant((PlantType)UltimateFireThreeGatling.PlantID);
             var ab_ash = CustomCore.GetAssetBundle(Assembly.GetExecutingAssembly(), "ashthreegaling");
             CustomCore.RegisterCustomPlant<Plant, AshThreeGatling>(AshThreeGatling.PlantID,
                 ab_ash.GetAsset<GameObject>("AshThreeGatlingPrefab"),
@@ -39,8 +40,10 @@ namespace UltimateFireThreeGatling.BepInEx
                     (1901, (int)PlantType.DarkThreePeater),
                     (1921, (int)PlantType.Jalapeno)
                 }, 0f, 0f, 0, 300, 0f, 1125);
-            CustomCore.AddPlantAlmanacStrings(AshThreeGatling.PlantID, $"灰烬三线超级机枪射手({AshThreeGatling.PlantID})",
+            CustomCore.AddPlantAlmanacStrings(AshThreeGatling.PlantID, $"灰烬三线超级机枪射手",
                 "被彻底烧焦的三线超级机枪射手，无法攻击。\n\n<color=#3D1400>贴图作者：@林秋-AutumnLin</color>\n<color=#3D1400>融合配方：</color><color=red>三线超级机枪射手（底座）+火爆辣椒+火爆辣椒</color>\n<color=#3D1400>特点：</color><color=red>失去攻击能力</color>\n\n<color=#3D1400>“我们曾无限接近死亡，生命无法一直保持濒死状态，他们只有生或死两个状态，”灰烬三线超级机枪射手长舒一口气，对着面前的植物说道。“与其说我们是灰烬，不如说灰烬创造了我们，我们是灰烬的孩子，就像大家喜欢阳光一样，我们喜欢如同灰烬一般的环境。”灰烬三线超级机枪射手知道他们体内又多大的能量，他们必须要学会控制并抑制这股力量，“我们不想让世界变成我们梦中那样，就像你们看到的那样，我们不具备任何攻击能力。”他们一直保持濒死的状态，自己身体剩余的能量只能拿来修复一直损坏的细胞，“我们喜欢这个世界。”他们在说完这句话之后，就沉沉的睡去了</color>");
+            CustomCore.TypeMgrExtra.LevelPlants.Add((PlantType)AshThreeGatling.PlantID, CardLevel.Purple);
+            CustomCore.AddUltimatePlant((PlantType)AshThreeGatling.PlantID);
         }
     }
 
@@ -59,7 +62,7 @@ namespace UltimateFireThreeGatling.BepInEx
             plant.shoot = plant.gameObject.transform.FindChild("headPos2/ThreePeater_head2/ThreePeater_mouth/Shoot");
             if (Board.Instance is not null && GameAPP.theGameStatus == GameStatus.InGame)
                 for (int i = 0; i < Board.Instance.rowNum; i++)
-                    Board.Instance.CreateFireLine(i);
+                    Board.Instance.CreateFireLine(i, 1800, false, false, true, null);
         }
 
         public SuperThreeGatling plant => gameObject.GetComponent<SuperThreeGatling>();
@@ -155,7 +158,7 @@ namespace UltimateFireThreeGatling.BepInEx
             if (__instance != null && (int)__instance.thePlantType == UltimateFireThreeGatling.PlantID)
                 if (Board.Instance is not null && GameAPP.theGameStatus == GameStatus.InGame)
                     for (int i = 0; i < Board.Instance.rowNum; i++)
-                        Board.Instance.CreateFireLine(i);
+                        Board.Instance.CreateFireLine(i, 1800);
         }
     }
 }

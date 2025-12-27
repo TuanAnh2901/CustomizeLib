@@ -1,12 +1,16 @@
-﻿using BepInEx;
+﻿// #define DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF // 启用多级词条
+
+using BepInEx;
+using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using BepInEx.Unity.IL2CPP.Utils;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEngine;
-using BepInEx.Unity.IL2CPP.Utils;
 
 ///
 ///Credit to likefengzi(https://github.com/likefengzi)(https://space.bilibili.com/237491236)
@@ -22,7 +26,7 @@ namespace CustomizeLib.BepInEx
         }
     }
 
-    [BepInPlugin("inf75.pvzcustomization", "PVZCustomization", "2.8")]
+    [BepInPlugin("salmon.inf75.pvzcustomization", "PVZCustomization", "3.2")]
     public class CustomCore : BasePlugin
     {
         public static class TypeMgrExtra
@@ -31,6 +35,7 @@ namespace CustomizeLib.BepInEx
             public static List<ZombieType> BigZombie { get; set; } = [];
             public static List<PlantType> DoubleBoxPlants { get; set; } = [];
             public static List<ZombieType> EliteZombie { get; set; } = [];
+            public static List<ZombieType> DriverZombie { get; set; } = [];
             public static List<PlantType> FlyingPlants { get; set; } = [];
             public static List<ZombieType> IsAirZombie { get; set; } = [];
             public static List<PlantType> IsCaltrop { get; set; } = [];
@@ -56,6 +61,8 @@ namespace CustomizeLib.BepInEx
             public static List<PlantType> UmbrellaPlants { get; set; } = [];
             public static List<ZombieType> UselessHypnoZombie { get; set; } = [];
             public static List<ZombieType> WaterZombie { get; set; } = [];
+            public static List<PlantType> UncrashablePlants { get; set; } = [];
+            public static Dictionary<PlantType, CardLevel> LevelPlants { get; set; } = [];
         }
 
         /// <summary>
@@ -130,6 +137,13 @@ namespace CustomizeLib.BepInEx
             public static Dictionary<ZombieType, int> WaterZombie { get; set; } = [];
         }
 
+        public enum BuffBgType
+        {
+            Day,
+            Night,
+            Pool
+        }
+
         /// <summary>
         /// 添加融合配方
         /// </summary>
@@ -144,8 +158,13 @@ namespace CustomizeLib.BepInEx
         /// <param name="id">植物id</param>
         /// <param name="name">植物名称</param>
         /// <param name="description">植物介绍</param>
-        public static void AddPlantAlmanacStrings(int id, string name, string description) =>
-            PlantsAlmanac.Add((PlantType)id, (name, description));
+        public static void AddPlantAlmanacStrings(int id, string name, string description)
+        {
+            String iName = name;
+            if (!Regex.Match(name, @"\(\d+\)$").Success)
+                iName = $"{name}({id})";
+            PlantsAlmanac.Add((PlantType)id, (iName, description));
+        }
 
         /// <summary>
         /// 添加僵尸图鉴
@@ -211,6 +230,8 @@ namespace CustomizeLib.BepInEx
             audioSource.Play();
         }
 
+#if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
+        #region 多级词条注册词条部分
         /// <summary>
         /// 注册自定义词条
         /// </summary>
@@ -222,7 +243,34 @@ namespace CustomizeLib.BepInEx
         /// <param name="plantType">选词条时展示植物的类型</param>
         /// <returns>分到的词条id</returns>
         public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string? color = null, PlantType plantType = PlantType.Nothing)
+            string? color = null, PlantType plantType = PlantType.Nothing) => RegisterCustomBuffLevel(text, buffType, canUnlock, cost, 1, color, plantType);
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="maxLevel">最大等级</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <returns>分到的词条id</returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            int maxLevel, string? color = null, PlantType plantType = PlantType.Nothing) => RegisterCustomBuffLevel(text, buffType, canUnlock, cost, maxLevel, color, plantType);
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <returns>分到的词条id</returns>
+        public static int RegisterCustomBuffLevel(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            int maxLevel = 1, string? color = null, PlantType plantType = PlantType.Nothing)
         {
             //if (color is not null) text = $"<color={color}>{text}</color>";
             switch (buffType)
@@ -231,6 +279,8 @@ namespace CustomizeLib.BepInEx
                     {
                         int i = TravelMgr.advancedBuffs.Count;
                         CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
+                        if (maxLevel != 1)
+                            CustomBuffsLevel.Add((buffType, CustomBuffsLevel.Count, i), maxLevel);
                         TravelMgr.advancedBuffs.Add(i, text);
                         return i;
                     }
@@ -238,6 +288,11 @@ namespace CustomizeLib.BepInEx
                     {
                         int i = TravelMgr.ultimateBuffs.Count;
                         CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
+                        if (maxLevel != 1)
+                        {
+                            CustomBuffsLevel.Add((buffType, CustomBuffsLevel.Count, i), maxLevel);
+                            MelonLogger.Msg($"{buffType} {CustomBuffsLevel.Count} {i} {maxLevel}");
+                        }
                         TravelMgr.ultimateBuffs.Add(i, text);
                         return i;
                     }
@@ -245,7 +300,116 @@ namespace CustomizeLib.BepInEx
                     {
                         int i = TravelMgr.debuffs.Count;
                         CustomDebuffs.Add(i, text);
+                        if (maxLevel != 1)
+                            CustomBuffsLevel.Add((buffType, CustomBuffsLevel.Count, i), maxLevel);
                         TravelMgr.debuffs.Add(i, text);
+                        return i;
+                    }
+                default:
+                    return -1;
+            }
+        }
+        #endregion
+#endif
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="bgType">词条背景类型</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
+        /// <returns></returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string color, PlantType plantType = PlantType.Nothing, int buffID = -1, BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="level">词条最高等级</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
+        /// <param name="bgType">词条背景类型</param>
+        /// <returns></returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost, int level,
+            string color, PlantType plantType = PlantType.Nothing, int buffID = -1,
+            BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+
+        /// <summary>
+        /// 注册自定义词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="canUnlock">解锁条件</param>
+        /// <param name="cost">词条商店花费积分</param>
+        /// <param name="color">词条颜色</param>
+        /// <param name="plantType">选词条时展示植物的类型</param>
+        /// <param name="level">词条最高等级</param>
+        /// <param name="bgType">词条背景类型</param>
+        /// <param name="zombieType">僵尸类型(仅词条类型为僵尸时使用)</param>
+        /// <param name="buffID">指定词条ID(不自动分配)</param>
+        /// <returns>分到的词条id</returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string? color, PlantType plantType, int level,
+            TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day, ZombieType zombieType = ZombieType.NormalZombie,
+            int buffID = -1)
+        {
+            //if (color is not null) text = $"<color={color}>{text}</color>";
+            switch (buffType)
+            {
+                case BuffType.AdvancedBuff:
+                    {
+                        if (BuffArrayCount.Item1 == -1)
+                            BuffArrayCount.Item1 = TravelMgr.advancedBuffs.Count;
+                        int i = TravelMgr.advancedBuffs.Count;
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
+                        CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
+                        TravelMgr.advancedBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
+                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
+                            CustomBuffsBg.Add((buffType, i), bgType);
+                        return i;
+                    }
+                case BuffType.UltimateBuff:
+                    {
+                        if (BuffArrayCount.Item2 == -1)
+                            BuffArrayCount.Item2 = TravelMgr.ultimateBuffs.Count;
+                        int i = TravelMgr.ultimateBuffs.Count;
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
+                        CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
+                        TravelMgr.ultimateBuffs.Add(i, text);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
+                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
+                            CustomBuffsBg.Add((buffType, i), bgType);
+                        return i;
+                    }
+                case BuffType.Debuff:
+                    {
+                        if (BuffArrayCount.Item3 == -1)
+                            BuffArrayCount.Item3 = TravelMgr.debuffs.Count;
+                        int i = TravelMgr.debuffs.Count;
+                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                            CustomBuffIDMapping.Add((buffType, i), buffID);
+                        CustomDebuffs.Add(i, (text, zombieType));
+                        TravelMgr.debuffs.Add(i, text);
+                        TravelMgr.debuffIconPairs.Add(i, zombieType);
+                        if (level != 1)
+                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
+                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
+                            CustomBuffsBg.Add((buffType, i), bgType);
                         return i;
                     }
                 default:
@@ -449,7 +613,33 @@ namespace CustomizeLib.BepInEx
             if (!CustomPlantsSkin.ContainsKey((PlantType)id))
             {
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = new()
+                        {
+                            attackDamage = attackDamage,
+                            field_Public_PlantType_0 = (PlantType)id,
+                            //攻击间隔
+                            field_Public_Single_0 = attackInterval,
+                            //生产间隔
+                            field_Public_Single_1 = produceInterval,
+                            //最大HP
+                            field_Public_Int32_0 = maxHealth,
+                            //种植冷却
+                            field_Public_Single_2 = cd,
+                            //花费阳光
+                            field_Public_Int32_1 = sun
+                        }
+                    }
+                });
+            }
+            else
+            {
+                CustomPlantsSkin[(PlantType)id].Add(new CustomPlantData()
                 {
                     ID = id,
                     Prefab = prefab,
@@ -470,15 +660,11 @@ namespace CustomizeLib.BepInEx
                         field_Public_Int32_1 = sun
                     }
                 });
-                foreach (var f in fusions)
-                {
-                    //添加融合配方
-                    AddFusion(id, f.Item1, f.Item2);
-                }
             }
-            else
+            foreach (var f in fusions)
             {
-                Instance.Value.Log.LogError($"Duplicate Plant ID: {id}");
+                //添加融合配方
+                AddFusion(id, f.Item1, f.Item2);
             }
         }
 
@@ -509,9 +695,34 @@ namespace CustomizeLib.BepInEx
             CustomPlantsSkinActive.Add((PlantType)id, false);
             if (!CustomPlantsSkin.ContainsKey((PlantType)id))
             {
-                //植物id不重复才进行注册
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = new()
+                        {
+                            attackDamage = attackDamage,
+                            field_Public_PlantType_0 = (PlantType)id,
+                            //攻击间隔
+                            field_Public_Single_0 = attackInterval,
+                            //生产间隔
+                            field_Public_Single_1 = produceInterval,
+                            //最大HP
+                            field_Public_Int32_0 = maxHealth,
+                            //种植冷却
+                            field_Public_Single_2 = cd,
+                            //花费阳光
+                            field_Public_Int32_1 = sun
+                        }
+                    }
+                });
+            }
+            else
+            {
+                CustomPlantsSkin[(PlantType)id].Add(new CustomPlantData()
                 {
                     ID = id,
                     Prefab = prefab,
@@ -519,6 +730,7 @@ namespace CustomizeLib.BepInEx
                     PlantData = new()
                     {
                         attackDamage = attackDamage,
+                        field_Public_PlantType_0 = (PlantType)id,
                         //攻击间隔
                         field_Public_Single_0 = attackInterval,
                         //生产间隔
@@ -531,15 +743,11 @@ namespace CustomizeLib.BepInEx
                         field_Public_Int32_1 = sun
                     }
                 });
-                foreach (var f in fusions)
-                {
-                    AddFusion(id, f.Item1, f.Item2);
-                }
             }
-            else
+            foreach (var f in fusions)
             {
                 //添加融合配方
-                Instance.Value.Log.LogError($"Duplicate Plant ID: {id}");
+                AddFusion(id, f.Item1, f.Item2);
             }
         }
 
@@ -565,17 +773,27 @@ namespace CustomizeLib.BepInEx
             {
                 //植物id不重复才进行注册
                 //CustomPlantTypes.Add((PlantType)id);
-                CustomPlantsSkin.Add((PlantType)id, new CustomPlantData()
-                {
-                    ID = id,
-                    Prefab = prefab,
-                    Preview = preview,
-                    PlantData = null
+                CustomPlantsSkin.Add((PlantType)id, new List<CustomPlantData> {
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = null
+                    }
                 });
             }
             else
             {
-                Instance.Value.Log.LogError($"Duplicate Plant ID: {id}");
+                CustomPlantsSkin[(PlantType)id].Add(
+                    new CustomPlantData()
+                    {
+                        ID = id,
+                        Prefab = prefab,
+                        Preview = preview,
+                        PlantData = null
+                    }
+                );
             }
         }
 
@@ -737,8 +955,9 @@ namespace CustomizeLib.BepInEx
         /// <param name="id">植物id</param>
         /// <param name="cost">开大花费</param>
         /// <param name="skill">要运行的大招函数</param>
+        /// <param name="defaultCost">默认开大花费</param>
         public static void RegisterSuperSkill([NotNull] int id, [NotNull] Func<Plant, int> cost,
-            [NotNull] Action<Plant> skill) => SuperSkills.Add((PlantType)id, (cost, skill));
+            [NotNull] Action<Plant> skill, [NotNull] int defaultCost = 1000) => SuperSkills.Add((PlantType)id, (cost, skill, defaultCost));
 
 
         /// <summary>
@@ -746,6 +965,19 @@ namespace CustomizeLib.BepInEx
         /// </summary>
         /// <param name="plantType">要设为究极植物的植物类型</param>
         public static void AddUltimatePlant([NotNull] PlantType plantType) => CustomUltimatePlants.Add(plantType);
+
+        /// <summary>
+        /// 注册自定义弱究植物
+        /// </summary>
+        /// <param name="plantType">植物类型</param>
+        public static void RegisterCustomWeakUltimatePlant([NotNull] PlantType plantType)
+        {
+            TravelMgr.allWeakUltimatePlants.Add(plantType);
+            if (!CustomWeakUltimatePlants.Contains(plantType))
+                CustomWeakUltimatePlants.Add(plantType);
+            else
+                CLogger.LogError($"Duplicate weak ultimate type: {plantType}");
+        }
 
         /// <summary>
         /// 注册自定义融合洋芋配方
@@ -808,7 +1040,7 @@ namespace CustomizeLib.BepInEx
             });
 
         /// <summary>
-        /// 
+        /// 注册自定义融合洋芋配方
         /// </summary>
         /// <param name="left">左植物</param>
         /// <param name="center">中间植物</param>
@@ -844,8 +1076,43 @@ namespace CustomizeLib.BepInEx
                 p1.Die();
                 p2.Die();
                 p3.Die();
-                GameAPP.PlaySound(125, 0.5f, 1f);
             }, failAction);
+
+        /// <summary>
+        /// 注册自定义子弹移动方式
+        /// </summary>
+        /// <param name="id">移动方式id</param>
+        /// <param name="action">移动逻辑</param>
+        public static void RegisterCustomBulletMovingWay(int id, Action<Bullet> action) => CustomBulletMovingWay.Add(id, action);
+
+        /// <summary>
+        /// 注册自定义植物点击在另一植物上事件
+        /// </summary>
+        /// <param name="plantType">底层植物（原有）</param>
+        /// <param name="cardType">卡槽植物（点击上去的）</param>
+        /// <param name="action">执行的事件</param>
+        public static void RegisterCustomClickCardOnPlantEvent([NotNull] PlantType plantType, [NotNull] PlantType cardType, [NotNull] Action<Plant> action)
+        {
+            if (CustomClickCardOnPlantEvents.ContainsKey((plantType, cardType)))
+                CustomClickCardOnPlantEvents[(plantType, cardType)].Add(action);
+            else
+                CustomClickCardOnPlantEvents.Add((plantType, cardType), new() { action });
+        }
+
+        /// <summary>
+        /// 注册自定义植物点击在另一植物上事件
+        /// </summary>
+        /// <param name="plantType">底层植物（原有）</param>
+        /// <param name="cardType">卡槽植物（点击上去的）</param>
+        /// <param name="actions">执行的事件列表</param>
+        public static void RegisterCustomClickCardOnPlantEvent([NotNull] PlantType plantType, [NotNull] PlantType cardType, [NotNull] List<Action<Plant>> actions)
+        {
+            if (CustomClickCardOnPlantEvents.ContainsKey((plantType, cardType)))
+                foreach (var action in actions)
+                    CustomClickCardOnPlantEvents[(plantType, cardType)].Add(action);
+            else
+                CustomClickCardOnPlantEvents.Add((plantType, cardType), actions);
+        }
 
         public override void Load()
         {
@@ -853,9 +1120,11 @@ namespace CustomizeLib.BepInEx
             ClassInjector.RegisterTypeInIl2Cpp<CustomPlantMonoBehaviour>();
             //ClassInjector.RegisterTypeInIl2Cpp<SelectCustomPlants>();
             ClassInjector.RegisterTypeInIl2Cpp<CheckCardState>();
+            ClassInjector.RegisterTypeInIl2Cpp<ExtensionDataComponent>();
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             Instance = new(this);
+            CLogger = this.Log;
             // TextureStore.Init();
         }
 
@@ -866,7 +1135,11 @@ namespace CustomizeLib.BepInEx
 
         public static Dictionary<int, (PlantType, string, Func<bool>, int, string?)> CustomAdvancedBuffs { get; set; } = [];
         public static Dictionary<BulletType, GameObject> CustomBullets { get; set; } = [];
-        public static Dictionary<int, string> CustomDebuffs { get; set; } = [];
+
+        /// <summary>
+        /// 自定义僵尸词条列表
+        /// </summary>
+        public static Dictionary<int, (string, ZombieType)> CustomDebuffs { get; set; } = [];
         public static List<(int, int, int)> CustomFusions { get; set; } = [];
         public static List<CustomLevelData> CustomLevels { get; set; } = [];
         public static Dictionary<ParticleType, GameObject> CustomParticles { get; set; } = [];
@@ -878,7 +1151,7 @@ namespace CustomizeLib.BepInEx
         /// <summary>
         /// 自定义植物皮肤列表
         /// </summary>
-        public static Dictionary<PlantType, CustomPlantData> CustomPlantsSkin { get; set; } = [];
+        public static Dictionary<PlantType, List<CustomPlantData>> CustomPlantsSkin { get; set; } = [];
 
         /// <summary>
         /// 自定义皮肤是否激活
@@ -890,6 +1163,20 @@ namespace CustomizeLib.BepInEx
         public static Dictionary<int, Sprite> CustomSprites { get; set; } = [];
 
         public static Dictionary<int, (PlantType, string, int, string?)> CustomUltimateBuffs { get; set; } = [];
+
+#if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
+        #region 多级词条相关字典
+        /// <summary>
+        /// 自定义词条最高等级列表
+        /// </summary>
+        public static Dictionary<(BuffType, int, int), int> CustomBuffsLevel { get; set; } = []; // 词条类型, 字典索引, 分配ID, 最大等级
+
+        /// <summary>
+        /// 存各种杂七杂八的数据
+        /// </summary>
+        public static object[] variables = new object[10];
+        #endregion
+#endif
 
         public static Dictionary<(PlantType, BucketType), Action<Plant>> CustomUseItems { get; set; } = [];
 
@@ -923,21 +1210,59 @@ namespace CustomizeLib.BepInEx
         public static Dictionary<PlantType, (string, string)?> PlantsSkinAlmanac { get; set; } = [];
 
         public static CoroutineRunner? ReplaceTextureRoutine { get; set; } = null;
-        public static Dictionary<PlantType, (Func<Plant, int>, Action<Plant>)> SuperSkills { get; set; } = [];
+        public static Dictionary<PlantType, (Func<Plant, int>, Action<Plant>, int)> SuperSkills { get; set; } = [];
         public static Dictionary<ZombieType, (string, string)> ZombiesAlmanac { get; set; } = [];
 
         /// <summary>
         /// 自定义融合洋芋配方
         /// </summary>
         public static Dictionary<(PlantType, PlantType, PlantType), (List<Action<Plant?, Plant?, Plant?>>, List<Action<Plant?, Plant?, Plant?>>)> CustomMixBombFusions { get; set; } = []; // (左植物, 中植物, 右植物), (成功事件, 失败事件)
+
+        /// <summary>
+        /// 自定义子弹移动方式
+        /// </summary>
+        public static Dictionary<int, Action<Bullet>> CustomBulletMovingWay { get; set; } = [];
+
+        /// <summary>
+        /// 自定义多级词条列表（Buff类型，ID）->（在列表的index，等级）
+        /// </summary>
+        public static Dictionary<(BuffType, int), (int, int)> CustomBuffsLevel { get; set; } = [];
+
+        /// <summary>
+        /// 自定义词条ID映射（Buff类型，指定ID）-> 内部ID
+        /// </summary>
+        public static Dictionary<(BuffType, int), int> CustomBuffIDMapping { get; set; } = [];
+
         /// <summary>
         /// 自定义究极植物列表
         /// </summary>
         public static List<PlantType> CustomUltimatePlants { get; set; } = [];
 
         /// <summary>
+        /// 自定义词条背景
+        /// </summary>
+        public static Dictionary<(BuffType, int), TravelBuffOptionButton.BgType> CustomBuffsBg { get; set; } = [];
+
+        /// <summary>
         /// 存卡片检查的列表，用于管理Packet显示，你不应该使用它
         /// </summary>
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
+
+        /// <summary>
+        /// 注册二创词条前的数组长度
+        /// </summary>
+        public static (int, int, int) BuffArrayCount = (-1, -1, -1);
+
+        /// <summary>
+        /// 自定义弱究列表
+        /// </summary>
+        public static List<PlantType> CustomWeakUltimatePlants { get; set; } = [];
+
+        /// <summary>
+        /// 自定义种植植物在另一植物上事件（当前位置的植物的类型，鼠标上的植物类型），Action参数：当前位置的植物
+        /// </summary>
+        public static Dictionary<(PlantType, PlantType), List<Action<Plant>>> CustomClickCardOnPlantEvents { get; set; } = [];
+
+        public static ManualLogSource CLogger { get; set; } = null!;
     }
 }
