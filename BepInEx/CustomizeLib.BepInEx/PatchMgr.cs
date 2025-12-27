@@ -3273,6 +3273,11 @@ namespace CustomizeLib.BepInEx
     [HarmonyPatch(typeof(UIMgr))]
     public static class UIMgrPatch
     {
+        private static Vector3 CalculatePosition(int col, int row)
+        {
+            return new Vector3(-300f + col * 150, 160f - row * 130);
+        }
+
         [HarmonyPatch(nameof(UIMgr.EnterChallengeMenu))]
         [HarmonyPostfix]
         public static void PostEnterChallengeMenu()
@@ -3283,7 +3288,7 @@ namespace CustomizeLib.BepInEx
             {
                 GameObject custom = UnityEngine.Object.Instantiate(firstBtns.GetChild(0).gameObject, firstBtns);
                 custom.name = "CustomLevels";
-                custom.transform.localPosition = new(-150, 30, 0);
+                custom.transform.localPosition = CalculatePosition((firstBtns.childCount - 1) % 6, (firstBtns.childCount - 1) / 6);
                 var window = custom.transform.FindChild("Window");
                 window.FindChild("Name").GetComponent<TextMeshProUGUI>().text = "¶þ´´¹Ø¿¨";
                 var adv = levels.FindChild("PageAdvantureLevel");
@@ -3322,7 +3327,7 @@ namespace CustomizeLib.BepInEx
                     levelIndex++;
                 }
                 window.GetComponent<FirstBtns>().pageToOpen = customLevels;
-                window.GetComponent<FirstBtns>().originPosition = new(-150, 30, 0);
+                window.GetComponent<FirstBtns>().originPosition = custom.transform.localPosition;
                 UnityEngine.Object.Destroy(pageSample);
                 UnityEngine.Object.Destroy(levelSample);
             }
