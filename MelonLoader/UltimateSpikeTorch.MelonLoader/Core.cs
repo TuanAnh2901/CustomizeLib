@@ -59,7 +59,7 @@ namespace UltimateSpikeTorch
         {
             if (collision.gameObject.TryGetComponent<Bullet>(out var bullet) && bullet is not null && !bullet.IsDestroyed())
             {
-                if (bullet.torchWood == plant.gameObject || bullet.isZombieBullet || bullet.theBulletRow != plant.thePlantRow)
+                if (bullet.torchWood == plant.gameObject || bullet.fromZombie || bullet.theBulletRow != plant.thePlantRow)
                     return;
                 if (bullet.theBulletType != BulletType.Bullet_puffPea && (int)bullet.theBulletType != 1922 && bullet.theBulletType != BulletType.Bullet_puffIronPea && bullet.theBulletType != BulletType.Bullet_firePea_small)
                     return;

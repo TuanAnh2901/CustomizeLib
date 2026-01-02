@@ -23,7 +23,7 @@ namespace IceDoomCherryJalapeno.BepInEx
                     var bc = par.GetComponent<BombCherry>();
                     bc.bombRow = __instance.thePlantRow;
                     bc.explodeDamage = __instance.attackDamage;
-                    bc.isFromZombie = false;
+                    bc.bulletFromZombie = false;
                     GameAPP.PlaySound(40, 0.2f);
                     zombie.KnockBack(0.5f, Zombie.KnockBackReason.ByJalapeno);
                     zombie.SetFreeze(10);

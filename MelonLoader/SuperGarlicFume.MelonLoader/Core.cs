@@ -76,7 +76,7 @@ namespace SuperGarlicFume.MelonLoader
                     GameAPP.PlaySound(UnityEngine.Random.RandomRangeInt(0, 3));
                     if (Lawnf.TravelAdvanced(Buff2))
                     {
-                        z.TakeDamage(DmgType.IceAll, z.theMaxHealth * z.poisonLevel / 100, true);
+                        z.TakeDamage(DmgType.IceAll, z.theMaxHealth * z.poisonLevel / 100, PlantType.Nothing, true);
                     }
                     if (Lawnf.TravelAdvanced(Buff1))
                     {
@@ -92,7 +92,7 @@ namespace SuperGarlicFume.MelonLoader
                     if (z.poisonLevel <= 1000000 && Lawnf.TravelAdvanced(Buff3) && z.freezeTimer > 3)
                     {
                         double multiplier = 1;
-                        foreach (var p in Board.Instance.plantArray)
+                        foreach (var p in Board.Instance.boardEntity.plantArray)
                         {
                             if (p is not null && p.thePlantRow == plant.thePlantRow && p.TryCast<UltimateMelon>() is not null)
                             {

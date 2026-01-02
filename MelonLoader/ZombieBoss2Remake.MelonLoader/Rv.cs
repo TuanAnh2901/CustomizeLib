@@ -19,7 +19,7 @@ namespace ZombieBoss2Remake.MelonLoader
         public void AnimRv()
         {
             // 获取战场上的植物列表
-            var plants = Board.Instance.plantArray;
+            var plants = Board.Instance.boardEntity.plantArray;
 
             bool hasAttacked = false;
 

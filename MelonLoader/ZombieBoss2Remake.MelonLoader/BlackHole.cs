@@ -27,7 +27,7 @@ namespace ZombieBoss2Remake.MelonLoader
                 Cloud?.Rotate(0, 0, -5);
                 if (m % 3 is 0)
                 {
-                    foreach (var p in Board.Instance.plantArray)
+                    foreach (var p in Board.Instance.boardEntity.plantArray)
                     {
                         if (p is not null && p.thePlantHealth > 40)
                         {
@@ -46,7 +46,7 @@ namespace ZombieBoss2Remake.MelonLoader
                 yield return new WaitForSeconds(Time.deltaTime);
             }
             if (gameObject is null || gameObject.IsDestroyed() || Board.Instance is null || Board.Instance.IsDestroyed()) yield break;
-            foreach (var p in Board.Instance.plantArray)
+            foreach (var p in Board.Instance.boardEntity.plantArray)
             {
                 if (p is not null)
                 {
@@ -58,11 +58,11 @@ namespace ZombieBoss2Remake.MelonLoader
                 }
             }
             ScreenShake.TriggerShake(0.4f);
-            for (int j = Board.Instance.plantArray.Count - 1; j >= 0; j--)
+            for (int j = Board.Instance.boardEntity.plantArray.Count - 1; j >= 0; j--)
             {
-                if (Board.Instance.plantArray[j] is not null && Board.Instance.plantArray[j].thePlantType is PlantType.GoldMelon or PlantType.SuperSunNut)
+                if (Board.Instance.boardEntity.plantArray[j] is not null && Board.Instance.boardEntity.plantArray[j].thePlantType is PlantType.GoldMelon or PlantType.SuperSunNut)
                 {
-                    Board.Instance.plantArray[j].Die();
+                    Board.Instance.boardEntity.plantArray[j].Die();
                 }
             }
             gameObject.active = false;

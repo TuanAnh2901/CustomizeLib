@@ -43,7 +43,7 @@ namespace SuperDoomSqualour.MelonLoader
                         {
                             z.isDoom = true;
                             z.doomWithPit = false;
-                            z.SetColor(Zombie.ZombieColor.Doom);
+                            z.UpdateColor(Zombie.ZombieColor.Doom);
                         }
                     }
                 }
