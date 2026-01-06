@@ -51,8 +51,8 @@ namespace FireSuperThreeGatling
     [HarmonyPatch(typeof(ThreePeater), nameof(ThreePeater.GetBulletType))]
     public class ThreePeater_GetBulletType
     {
-        [HarmonyPrefix]
-        public static bool Prefix(ThreePeater __instance, ref BulletType __result)
+        [HarmonyPostfix]
+        public static void Postfix(ThreePeater __instance, ref BulletType __result)
         {
             if (__instance != null && (int)__instance.thePlantType == FireSuperThreeGatling.PlantID)
             {
@@ -90,9 +90,7 @@ namespace FireSuperThreeGatling
                             break;
                     }
                 }
-                return false;
             }
-            return true;
         }
     }
 

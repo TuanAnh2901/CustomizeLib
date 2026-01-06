@@ -26,20 +26,20 @@ namespace SuperDoomSqualour.MelonLoader
             bool mindCtrlled = false;
             if (UnityEngine.Random.Range(0, 10) is 0 || Lawnf.TravelAdvanced(SuperDoomSqualour.Buff))
             {
-                zombie.TakeDamage(DmgType.Normal, __instance.Damage, true);
+                zombie.TakeDamage(DmgType.Normal, __instance.Damage, PlantType.Nothing, true);
                 zombie.SetMindControl();
                 zombie.isDoom = true;
                 zombie.doomWithPit = false;
-                zombie.SetColor(Zombie.ZombieColor.Doom);
+                zombie.UpdateColor(Zombie.ZombieColor.Doom);
                 if (!zombie.isMindControlled) zombie.Die();
                 mindCtrlled = true;
             }
             else
             {
-                zombie.TakeDamage(DmgType.Normal, __instance.Damage, true);
+                zombie.TakeDamage(DmgType.Normal, __instance.Damage, PlantType.Nothing, true);
                 zombie.isDoom = true;
                 zombie.doomWithPit = false;
-                zombie.SetColor(Zombie.ZombieColor.Doom);
+                zombie.UpdateColor(Zombie.ZombieColor.Doom);
             }
 
             // 播放声音
@@ -165,7 +165,7 @@ namespace SuperDoomSqualour.MelonLoader
                         {
                             z.isDoom = true;
                             z.doomWithPit = false;
-                            z.SetColor(Zombie.ZombieColor.Doom);
+                            z.UpdateColor(Zombie.ZombieColor.Doom);
                         }
                     }
                 }

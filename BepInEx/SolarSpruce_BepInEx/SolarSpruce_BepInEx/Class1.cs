@@ -72,7 +72,7 @@ namespace SolarSpruce
                 y: shootPos.y,
                 theRow: plant.thePlantRow,
                 theBulletType: (BulletType)Bullet_shulkSolarSpruce.BulletID,
-                theMovingWay: 16,
+                theMovingWay: BulletMoveWay.Convolute,
                 isZombieBullet: false
             );
 
@@ -192,8 +192,7 @@ namespace SolarSpruce
                             // 造成伤害
                             z.TakeDamage(
                                 theDamageType: DmgType.Shieldless,
-                                theDamage: __instance.Damage,
-                                false
+                                theDamage: __instance.Damage
                             );
                             __instance.hitTimes++;
                         }
@@ -203,8 +202,7 @@ namespace SolarSpruce
                 {
                     zombie.TakeDamage(
                         theDamageType: DmgType.Shieldless,
-                        theDamage: __instance.Damage,
-                        false
+                        theDamage: __instance.Damage
                     );
                     __instance.hitTimes++;
                 }

@@ -52,11 +52,11 @@ namespace ThreePuffFireSuperGatling.BepInEx
         }
     }
 
-    [HarmonyPatch(typeof(ThreePeater), nameof(ThreePeater.GetBulletType))]
-    public class ThreePeater_GetBulletType
+    [HarmonyPatch(typeof(Shooter), nameof(Shooter.GetBulletType))]
+    public class Shooter_GetBulletType
     {
         [HarmonyPrefix]
-        public static bool Prefix(ThreePeater __instance, ref BulletType __result)
+        public static bool Prefix(Shooter __instance, ref BulletType __result)
         {
             if (__instance != null && (int)__instance.thePlantType == ThreePuffFireSuperGatling.PlantID)
             {

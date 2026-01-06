@@ -490,6 +490,56 @@ namespace CustomizeLib.BepInEx
         }
     }
 
+    [HarmonyPatch(typeof(Application))]
+    public static class ApplicationPatch
+    {
+        [HarmonyPatch(nameof(Application.Quit), new Type[] { })]
+        [HarmonyPrefix]
+        public static void PreQuitBase()
+        {
+            Dictionary<PlantType, int> skinDic = new();
+            foreach (var (key, value) in GameAPP.resourcesManager.plantSkinDic)
+            {
+                if (CustomCore.CustomPlantsSkin.ContainsKey(key))
+                {
+                    skinDic.Add(key, value);
+                }
+            }
+
+            var jsonText = JsonSerializer.Serialize(skinDic);
+            var directory = Path.Combine(Application.persistentDataPath, "Skin");
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, "skin.json");
+            if (!File.Exists(path))
+                File.Create(path).Dispose();
+            File.WriteAllText(path, jsonText);
+        }
+
+        [HarmonyPatch(nameof(Application.Quit), new Type[] { typeof(int) })]
+        [HarmonyPrefix]
+        public static void PreQuitOverride()
+        {
+            Dictionary<PlantType, int> skinDic = new();
+            foreach (var (key, value) in GameAPP.resourcesManager.plantSkinDic)
+            {
+                if (CustomCore.CustomPlantsSkin.ContainsKey(key))
+                {
+                    skinDic.Add(key, value);
+                }
+            }
+
+            var jsonText = JsonSerializer.Serialize(skinDic);
+            var directory = Path.Combine(Application.persistentDataPath, "Skin");
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, "skin.json");
+            if (!File.Exists(path))
+                File.Create(path).Dispose();
+            File.WriteAllText(path, jsonText);
+        }
+    }
+
     [HarmonyPatch(typeof(AlmanacPlantWindow))]
     public static class AlmanacPlantWindowPatch
     {
@@ -499,93 +549,14 @@ namespace CustomizeLib.BepInEx
         {
             {
                 PlantType plantType = thePlantType;
-                if (CustomCore.CustomPlantsSkinActive.ContainsKey(plantType) && !CustomCore.CustomPlantsSkinActive[plantType])
-                {
-                    if (CustomCore.CustomPlantsSkin.ContainsKey(plantType))
-                        __instance.skinButton.SetActive(CustomCore.CustomPlantsSkin.ContainsKey(plantType));
-
-                    if (CustomCore.CustomPlantsSkin.TryGetValue(plantType, out var data))
-                    {
-                        if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue(plantType, out var _))
-                            GameAPP.resourcesManager.plantSkinDic.Add(plantType, 0);
-                        foreach (var item in data)
-                        {
-                            var prefab = item.Prefab;
-                            var preview = item.Preview;
-
-                            if (prefab != null)
-                            {
-                                if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(plantType))
-                                    GameAPP.resourcesManager._plantPrefabs[plantType].Add(prefab);
-                                else
-                                {
-                                    Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                                    list.Add(GameAPP.resourcesManager.plantPrefabs[plantType]);
-                                    list.Add(prefab);
-                                    GameAPP.resourcesManager._plantPrefabs.Add(plantType, list);
-                                }
-                            }
-                            if (preview != null)
-                            {
-                                if (GameAPP.resourcesManager._plantPreviews.ContainsKey(plantType))
-                                    GameAPP.resourcesManager._plantPreviews[plantType].Add(preview);
-                                else
-                                {
-                                    Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                                    list.Add(GameAPP.resourcesManager.plantPreviews[plantType]);
-                                    list.Add(preview);
-                                    GameAPP.resourcesManager._plantPreviews.Add(plantType, list);
-                                }
-                            }
-                            CustomCore.CustomPlantsSkinActive[plantType] = true;
-                        }
-                    }
-                }
+                if (CustomCore.CustomPlantsSkin.ContainsKey(plantType))
+                    __instance.skinButton.SetActive(CustomCore.CustomPlantsSkin.ContainsKey(plantType));
             }
             {
                 PlantType plantType = thePlantType;
-                if (CustomCore.CustomPlantsSkinActive.ContainsKey(plantType) && CustomCore.CustomPlantsSkinActive[plantType]) goto DIR_SEARCH;
-
                 if (CustomCore.CustomPlantTypes.Contains(plantType))
                     __instance.skinButton.SetActive(CustomCore.CustomPlantsSkin.ContainsKey(plantType));
-
-                if (!CustomCore.CustomPlantsSkin.TryGetValue(plantType, out var data)) goto DIR_SEARCH;
-                if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue(plantType, out var _))
-                    GameAPP.resourcesManager.plantSkinDic.Add(plantType, 0);
-
-                foreach (var item in data)
-                {
-                    var prefab = item.Prefab;
-                    var preview = item.Preview;
-
-                    if (prefab != null)
-                    {
-                        if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(plantType))
-                            GameAPP.resourcesManager._plantPrefabs[plantType].Add(prefab);
-                        else
-                        {
-                            Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                            list.Add(GameAPP.resourcesManager.plantPrefabs[plantType]);
-                            list.Add(prefab);
-                            GameAPP.resourcesManager._plantPrefabs.Add(plantType, list);
-                        }
-                    }
-                    if (preview != null)
-                    {
-                        if (GameAPP.resourcesManager._plantPreviews.ContainsKey(plantType))
-                            GameAPP.resourcesManager._plantPreviews[plantType].Add(preview);
-                        else
-                        {
-                            Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                            list.Add(GameAPP.resourcesManager.plantPreviews[plantType]);
-                            list.Add(preview);
-                            GameAPP.resourcesManager._plantPreviews.Add(plantType, list);
-                        }
-                    }
-                    CustomCore.CustomPlantsSkinActive[plantType] = true;
-                }
             }
-        DIR_SEARCH:
             {
                 PlantType plantType = thePlantType;
                 if (CustomCore.CustomPlantsSkinActive.ContainsKey(plantType) && CustomCore.CustomPlantsSkinActive[plantType]) return;
@@ -596,125 +567,37 @@ namespace CustomizeLib.BepInEx
                 if (!Directory.Exists(skinPath))
                     return;
                 var regex = new Regex($@"^skin_{(int)plantType}(?!\d).*$", RegexOptions.IgnoreCase);
-                String[] files = Directory.GetFiles(skinPath).Where(str => regex.IsMatch(Path.GetFileNameWithoutExtension(str))).ToArray();
-                foreach (var item in files)
-                {
-                    AssetBundle ab = AssetBundle.LoadFromFile(item);
-                    GameObject? prefab = null;
-                    try
-                    {
-                        prefab = ab.GetAsset<GameObject>("Prefab");
-                        prefab.tag = "Plant";
-                    }
-                    catch
-                    {
-                        return;
-                    }
-                    GameObject? preview = null;
-                    try
-                    {
-                        preview = ab.GetAsset<GameObject>("Preview");
-                        preview.tag = "Preview";
-                    }
-                    catch
-                    {
-                        return;
-                    }
-
-                    CustomPlantData newCustomPlantData = new()
-                    {
-                        ID = (int)plantType,
-                        PlantData = PlantDataLoader.plantDatas[plantType],
-                        Prefab = GameAPP.resourcesManager.plantPrefabs[plantType],
-                        Preview = GameAPP.resourcesManager.plantPreviews[plantType]
-                    };
-
-                    if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue(plantType, out var _))
-                        GameAPP.resourcesManager.plantSkinDic.Add(plantType, 0);
-
-                    if (prefab != null)
-                    {
-                        GameObject oldPrefab = GameAPP.resourcesManager.plantPrefabs[plantType];
-                        var components = oldPrefab.GetComponents<Component>();
-                        // 复制旧预制体上的组件
-                        foreach (var component in components)
-                        {
-                            if (!prefab.TryGetComponent(component.GetIl2CppType(), out var comp) && comp == null)
-                                prefab.AddComponent(component.GetIl2CppType());
-                        }
-                        // 赋值植物类型
-                        prefab.GetComponent<Plant>().thePlantType = oldPrefab.GetComponent<Plant>().thePlantType;
-
-                        if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(plantType))
-                            GameAPP.resourcesManager._plantPrefabs[plantType].Add(prefab);
-                        else
-                        {
-                            Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                            list.Add(GameAPP.resourcesManager.plantPrefabs[plantType]);
-                            list.Add(prefab);
-                            GameAPP.resourcesManager._plantPrefabs.Add(plantType, list);
-                        }
-                        prefab.GetComponent<Plant>().FindShoot(prefab.GetComponent<Plant>().transform);
-                        newCustomPlantData.Prefab = prefab;
-                    }
-                    if (preview != null)
-                    {
-                        if (GameAPP.resourcesManager._plantPreviews.ContainsKey(plantType))
-                            GameAPP.resourcesManager._plantPreviews[plantType].Add(preview);
-                        else
-                        {
-                            Il2CppSystem.Collections.Generic.List<GameObject> list = new();
-                            list.Add(GameAPP.resourcesManager.plantPreviews[plantType]);
-                            list.Add(preview);
-                            GameAPP.resourcesManager._plantPreviews.Add(plantType, list);
-                        }
-
-                        GameObject oldPreview = GameAPP.resourcesManager.plantPreviews[plantType];
-                        var components = oldPreview.GetComponents<Component>();
-                        // 复制旧预制体上的组件
-                        foreach (var component in components)
-                        {
-                            if (!preview.TryGetComponent(component.GetIl2CppType(), out var comp) && comp == null)
-                                preview.AddComponent(component.GetIl2CppType());
-                        }
-                        newCustomPlantData.Preview = preview;
-                    }
-                    __instance.skinButton.SetActive(true);
-                    if (CustomCore.CustomPlantsSkin.ContainsKey(plantType))
-                        CustomCore.CustomPlantsSkin[plantType].Add(newCustomPlantData);
-                    else
-                        CustomCore.CustomPlantsSkin.Add(plantType, new List<CustomPlantData> { newCustomPlantData });
-                    /*Msg("bullet");
-                    GameObject? bulletPrefab = null;
-                    BulletType bulletType = (BulletType)(-1);
-                    try
-                    {
-                        var strArray = ab.GetAssetsNames();
-                        Regex regex = new(@"^BulletPrefab_(\d+)$");
-                        foreach (var str in strArray)
-                        {
-                            Match match = regex.Match(str);
-                            if (match.Success)
-                                if (ab.GetAsset<GameObject>(str) != null && int.TryParse(match.Groups[1].Value, out var type))
-                                {
-                                    bulletPrefab = ab.GetAsset<GameObject>(str);
-                                    bulletType = (BulletType)type;
-                                }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        MelonLogger.Msg(e);
-                    }
-                    if (bulletPrefab != null)
-                    {
-                        foreach (var component in GameAPP.resourcesManager.bulletPrefabs[bulletType].GetComponents<Component>())
-                            if (!bulletPrefab.TryGetComponent(component.GetIl2CppType(), out var comp) && comp == null)
-                                bulletPrefab.AddComponent(component.GetIl2CppType());
-                        CustomCore.RegisterCustomBulletSkin(bulletPrefab, plantType, bulletType);
-                    }*/
-                }
+                var files = Directory.GetFiles(skinPath).Where(str => regex.IsMatch(Path.GetFileNameWithoutExtension(str))).ToList();
+                __instance.skinButton.SetActive(files.Count > 0);
             }
+        }
+
+        [HarmonyPatch(nameof(AlmanacPlantWindow.LeftSkin))]
+        [HarmonyPrefix]
+        public static void PreLeftSkin(AlmanacPlantWindow __instance, out bool __state)
+        {
+            __state = __instance.skinButton.active;
+        }
+
+        [HarmonyPatch(nameof(AlmanacPlantWindow.LeftSkin))]
+        [HarmonyPostfix]
+        public static void PostLeftSkin(AlmanacPlantWindow __instance, bool __state)
+        {
+            __instance.skinButton.SetActive(__state);
+        }
+
+        [HarmonyPatch(nameof(AlmanacPlantWindow.RightSkin))]
+        [HarmonyPrefix]
+        public static void PreRightSkin(AlmanacPlantWindow __instance, out bool __state)
+        {
+            __state = __instance.skinButton.active;
+        }
+
+        [HarmonyPatch(nameof(AlmanacPlantWindow.RightSkin))]
+        [HarmonyPostfix]
+        public static void PostRightSkin(AlmanacPlantWindow __instance, bool __state)
+        {
+            __instance.skinButton.SetActive(__state);
         }
     }
 
@@ -745,7 +628,7 @@ namespace CustomizeLib.BepInEx
             var newSelect = Instantiate(go, __instance.transform.FindChild("FilterMenu/Scroll View/Viewport/Content/Buttons"));
             Action action = () =>
             {
-                Func<PlantType, bool> func = (plantType) => CustomCore.CustomPlantTypes.Contains(plantType);
+                Func<PlantType, bool> func = (plantType) => !Enum.IsDefined(plantType);
                 __instance.ShowPlants(func);
             };
             UnityEvent unityEvent = new();
@@ -860,6 +743,7 @@ namespace CustomizeLib.BepInEx
         [HarmonyPostfix]
         public static void Postfix_LimTravel(CreatePlant __instance, ref PlantType theSeedType, ref bool __result)
         {
+            // 判定
             {
                 bool isCanSet = false;
                 if (TravelMgr.Instance != null && TravelMgr.Instance.ulockTemp.Contains(theSeedType))
@@ -873,6 +757,7 @@ namespace CustomizeLib.BepInEx
                     InGameText.Instance.ShowText("该配方仅旅行生存系列或深渊可用", 3f, false);
                 }
             }
+            // 弱究
             {
                 if (CustomCore.CustomWeakUltimatePlants.Contains(theSeedType))
                 {
@@ -880,7 +765,7 @@ namespace CustomizeLib.BepInEx
                         __result = false;
                     else
                     {
-                        if (!__instance.board.boardTag.enableAllTravelPlant && !__instance.board.boardTag.enableTravelPlant)
+                        if (!__instance.board.boardTag.enableAllTravelPlant && !__instance.board.boardTag.enableTravelPlant && !__instance.board.boardTag.isSuperRandom && !__instance.board.boardTag.isUltimateSuperRandom)
                         {
                             __result = true;
                             InGameText.Instance.ShowText("该配方仅旅行模式或深渊可用", 3f);
@@ -912,6 +797,37 @@ namespace CustomizeLib.BepInEx
                                     }
                                     else
                                         __result = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // 强究
+            {
+                if (CustomCore.CustomStrongUltimatePlants.ContainsKey(theSeedType))
+                {
+                    if (__instance.board == null)
+                        __result = false;
+                    else
+                    {
+                        if (!__instance.board.boardTag.enableAllTravelPlant && !__instance.board.boardTag.enableTravelPlant && !__instance.board.boardTag.isSuperRandom && !__instance.board.boardTag.isUltimateSuperRandom)
+                        {
+                            __result = true;
+                            InGameText.Instance.ShowText("该配方仅旅行模式或深渊可用", 4f);
+                        }
+                        else
+                        {
+                            if (TravelMgr.Instance == null)
+                                __result = false;
+                            else
+                            {
+                                if (TravelMgr.Instance.unlockPlant[CustomCore.CustomStrongUltimatePlants[theSeedType]] || __instance.board.boardTag.enableAllTravelPlant || __instance.board.boardTag.isSuperRandom || __instance.board.boardTag.isUltimateSuperRandom)
+                                    __result = false;
+                                else
+                                {
+                                    __result = true;
+                                    InGameText.Instance.ShowText("该配方需要抽取", 4f);
                                 }
                             }
                         }
@@ -1541,7 +1457,8 @@ namespace CustomizeLib.BepInEx
     [HarmonyPatch(typeof(NoticeMenu), nameof(NoticeMenu.Start))]
     public static class NoticeMenuPatch
     {
-        [HarmonyPrefix]
+
+        [HarmonyPostfix]
         public static void Postfix()
         {
             #region 自动扩容
@@ -1687,8 +1604,184 @@ namespace CustomizeLib.BepInEx
                 propertyInfo.SetValue(null, uncrashablePlants);
             }
 
-        END_BLOCK:
-            return;
+            #region 注册皮肤
+            foreach (var item in CustomCore.CustomPlantsSkin)
+            {
+                var plantType = item.Key;
+                if (!CustomCore.CustomPlantsSkinActive[plantType])
+                {
+                    if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue(plantType, out var _))
+                        GameAPP.resourcesManager.plantSkinDic.Add(plantType, 0);
+                    foreach (var it in item.Value)
+                    {
+                        var prefab = it.Prefab;
+                        var preview = it.Preview;
+
+                        if (prefab != null)
+                        {
+                            if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(plantType))
+                                GameAPP.resourcesManager._plantPrefabs[plantType].Add(prefab);
+                            else
+                            {
+                                Il2CppSystem.Collections.Generic.List<GameObject> list = new();
+                                list.Add(GameAPP.resourcesManager.plantPrefabs[plantType]);
+                                list.Add(prefab);
+                                GameAPP.resourcesManager._plantPrefabs.Add(plantType, list);
+                            }
+                        }
+                        if (preview != null)
+                        {
+                            if (GameAPP.resourcesManager._plantPreviews.ContainsKey(plantType))
+                                GameAPP.resourcesManager._plantPreviews[plantType].Add(preview);
+                            else
+                            {
+                                Il2CppSystem.Collections.Generic.List<GameObject> list = new();
+                                list.Add(GameAPP.resourcesManager.plantPreviews[plantType]);
+                                list.Add(preview);
+                                GameAPP.resourcesManager._plantPreviews.Add(plantType, list);
+                            }
+                        }
+                        CustomCore.CustomPlantsSkinActive[plantType] = true;
+                    }
+                }
+            }
+            String? fullName = Directory.GetParent(Application.dataPath)?.FullName;
+            if (fullName != null)
+            {
+                string skinPath = Path.Combine(fullName, "BepInEx", "plugins", "Skin");
+                if (Directory.Exists(skinPath))
+                {
+                    var regex = new Regex(@"^skin_(\d+)(?!\d).*$", RegexOptions.IgnoreCase);
+                    foreach (var path in Directory.GetFiles(skinPath))
+                    {
+                        var match = regex.Match(Path.GetFileNameWithoutExtension(path));
+                        if (match.Success && int.TryParse(match.Groups[1].Value, out int id))
+                        {
+                            var plantType = (PlantType)id;
+                            if (CustomCore.CustomPlantsSkinActive.ContainsKey(plantType) && CustomCore.CustomPlantsSkinActive[plantType]) continue;
+                            var ab = AssetBundle.LoadFromFile(path);
+                            GameObject? prefab = null;
+                            GameObject? preview = null;
+                            try
+                            {
+                                prefab = ab.GetAsset<GameObject>("Prefab");
+                                prefab.tag = "Plant";
+                            }
+                            catch { continue; }
+                            try
+                            {
+                                preview = ab.GetAsset<GameObject>("Preview");
+                                preview.tag = "Preview";
+                            }
+                            catch { continue; }
+                            CustomPlantData data = new()
+                            {
+                                ID = id,
+                                PlantData = PlantDataLoader.plantDatas[plantType],
+                                Prefab = GameAPP.resourcesManager.plantPrefabs[plantType],
+                                Preview = GameAPP.resourcesManager.plantPreviews[plantType]
+                            };
+
+                            if (!GameAPP.resourcesManager.plantSkinDic.TryGetValue(plantType, out var _))
+                                GameAPP.resourcesManager.plantSkinDic.Add(plantType, 0);
+
+                            if (prefab != null)
+                            {
+                                foreach (var comp in GameAPP.resourcesManager.plantPrefabs[plantType].GetComponents<Component>())
+                                    if (!prefab.TryGetComponent(comp.GetIl2CppType(), out var cmp) && cmp == null)
+                                        prefab.AddComponent(comp.GetIl2CppType());
+                                prefab.GetComponent<Plant>().thePlantType = plantType;
+
+                                if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(plantType))
+                                    GameAPP.resourcesManager._plantPrefabs[plantType].Add(prefab);
+                                else
+                                {
+                                    Il2CppSystem.Collections.Generic.List<GameObject> list = new();
+                                    list.Add(GameAPP.resourcesManager.plantPrefabs[plantType]);
+                                    list.Add(prefab);
+                                    GameAPP.resourcesManager._plantPrefabs.Add(plantType, list);
+                                }
+
+                                prefab.GetComponent<Plant>().FindShoot(prefab.GetComponent<Plant>().transform);
+                                data.Prefab = prefab;
+                            }
+
+                            if (preview != null)
+                            {
+                                foreach (var comp in GameAPP.resourcesManager.plantPreviews[plantType].GetComponents<Component>())
+                                    if (!preview.TryGetComponent(comp.GetIl2CppType(), out var cmp) && cmp == null)
+                                        preview.AddComponent(comp.GetIl2CppType());
+
+                                if (GameAPP.resourcesManager._plantPreviews.ContainsKey(plantType))
+                                    GameAPP.resourcesManager._plantPreviews[plantType].Add(preview);
+                                else
+                                {
+                                    Il2CppSystem.Collections.Generic.List<GameObject> list = new();
+                                    list.Add(GameAPP.resourcesManager.plantPreviews[plantType]);
+                                    list.Add(preview);
+                                    GameAPP.resourcesManager._plantPreviews.Add(plantType, list);
+                                }
+
+                                data.Preview = preview;
+                            }
+                            if (CustomCore.CustomPlantsSkin.ContainsKey(plantType))
+                                CustomCore.CustomPlantsSkin[plantType].Add(data);
+                            else
+                                CustomCore.CustomPlantsSkin.Add(plantType, new List<CustomPlantData> { data });
+                        }
+                    }
+                }
+            }
+
+            // 读取存档的皮肤
+            {
+                var directory = Path.Combine(Application.persistentDataPath, "Skin");
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                var path = Path.Combine(directory, "skin.json");
+                if (!File.Exists(path))
+                {
+                    File.Create(path).Dispose();
+                }
+                else
+                {
+                    var content = File.ReadAllText(path);
+                    try
+                    {
+                        var skinDic = JsonSerializer.Deserialize<Dictionary<PlantType, int>>(content);
+                        if (skinDic != null)
+                        {
+                            foreach (var (key, value) in skinDic)
+                            {
+                                if (GameAPP.resourcesManager.plantSkinDic.ContainsKey(key))
+                                {
+                                    if (GameAPP.resourcesManager._plantPrefabs.ContainsKey(key) && GameAPP.resourcesManager._plantPrefabs[key].Count > value &&
+                                        GameAPP.resourcesManager._plantPreviews.ContainsKey(key) && GameAPP.resourcesManager._plantPreviews[key].Count > value)
+                                    {
+                                        GameAPP.resourcesManager.plantPrefabs[key] = GameAPP.resourcesManager._plantPrefabs[key][value];
+                                        GameAPP.resourcesManager.plantPreviews[key] = GameAPP.resourcesManager._plantPreviews[key][value];
+                                        GameAPP.resourcesManager.plantSkinDic[key] = value;
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            GameAPP.resourcesManager.plantPrefabs[key] = GameAPP.resourcesManager._plantPrefabs[key][0];
+                                            GameAPP.resourcesManager.plantPreviews[key] = GameAPP.resourcesManager._plantPreviews[key][0];
+                                            GameAPP.resourcesManager.plantSkinDic[key] = 0;
+                                        }
+                                        catch (Exception) { }
+                                    }
+                                }
+                                else
+                                    continue;
+                            }
+                        }
+                    }
+                    catch (JsonException) { }
+                }
+            }
+            #endregion
         }
     }
 
@@ -1940,6 +2033,18 @@ namespace CustomizeLib.BepInEx
                 }
             }
             catch (ArgumentException) { }
+        }
+
+        [HarmonyPatch(nameof(Board.WheatLimit))]
+        [HarmonyPrefix]
+        public static bool PreWheatLimit(ref PlantType plantType, ref bool __result)
+        {
+            if (CustomCore.CustomUltimatePlants.Contains(plantType))
+            {
+                __result = true;
+                return false;
+            }
+            return true;
         }
     }
 
@@ -2393,6 +2498,13 @@ namespace CustomizeLib.BepInEx
                 __instance.debuff = newdeb;
             }
 
+            if (CustomCore.CustomUnlockBuffs.Count > 0)
+            {
+                bool[] newUnlock = new bool[__instance.unlockPlant.Count + CustomCore.CustomUnlockBuffs.Count];
+                Array.Copy(__instance.unlockPlant, newUnlock, __instance.unlockPlant.Length);
+                __instance.unlockPlant = newUnlock;
+            }
+
 #if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF
             #region 多级词条扩容
             if (CustomCore.CustomBuffsLevel.Count > 0)//高级词条
@@ -2460,6 +2572,14 @@ namespace CustomizeLib.BepInEx
             {
                 __result = CustomCore.CustomAdvancedBuffs[index].Item1;
             }
+        }
+
+        [HarmonyPatch(nameof(TravelMgr.GetUltimateText))]
+        [HarmonyPostfix]
+        public static void PostGetUltimateText(ref int index, ref string __result)
+        {
+            if (CustomCore.CustomUltimateBuffs.ContainsKey(index))
+                __result = CustomCore.CustomUltimateBuffs[index].Item2;
         }
 
 #if DEBUG_FEATURE__ENABLE_MULTI_LEVEL_BUFF

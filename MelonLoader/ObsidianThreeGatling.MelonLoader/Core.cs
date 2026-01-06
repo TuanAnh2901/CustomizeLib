@@ -64,20 +64,24 @@ namespace ObsidianThreeGatling.MelonLoader
 
         public void Update()
         {
-            if (!init && GameAPP.theGameStatus == GameStatus.InGame)
+            try
             {
-                totalDamage = plant.attributeCount;
-                int damage = totalDamage / 2000 * 40 + 120;
-                if (damage < 0 || damage > int.MaxValue)
-                    damage = int.MaxValue;
-                if (Lawnf.TravelUltimateLevel(21) == 2)
-                    plant.attackDamage = damage;
-                else if (Lawnf.TravelUltimate(21))
-                    plant.attackDamage = damage > 1440 ? 1440 : damage;
-                else
-                    plant.attackDamage = damage > 360 ? 360 : damage;
-                init = true;
+                if (!init && GameAPP.theGameStatus == GameStatus.InGame && plant != null)
+                {
+                    totalDamage = plant.attributeCount;
+                    int damage = totalDamage / 2000 * 40 + 120;
+                    if (damage < 0 || damage > int.MaxValue)
+                        damage = int.MaxValue;
+                    if (Lawnf.TravelUltimateLevel(21) == 2)
+                        plant.attackDamage = damage;
+                    else if (Lawnf.TravelUltimate(21))
+                        plant.attackDamage = damage > 1440 ? 1440 : damage;
+                    else
+                        plant.attackDamage = damage > 360 ? 360 : damage;
+                    init = true;
+                }
             }
+            catch (NullReferenceException) { }
         }
 
         public Bullet AnimShoot_ObsidianThreeGatling()

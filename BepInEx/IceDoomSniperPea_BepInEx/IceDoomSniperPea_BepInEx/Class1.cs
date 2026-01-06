@@ -56,7 +56,7 @@ namespace IceDoomSniperPea.BepInEx
             CustomCore.TypeMgrExtra.IsIcePlant.Add((PlantType)IceDoomSniperPea.PlantID);
             CustomCore.TypeMgrExtra.LevelPlants.Add((PlantType)IceDoomSniperPea.PlantID, CardLevel.Gold);
             IceDoomSniperPea.buff1 = CustomCore.RegisterCustomBuff("精装炸弹：冰毁炸弹爆炸的伤害x3，冰毁炸弹引爆后会为附近的僵尸挂上冰毁炸弹。2级时，每次引爆都造成寒冰毁灭菇爆炸，引爆时有50%概率触发超级爆头，并附带10%韧性的伤害", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, 2, CustomCore.BuffBgType.Night);
-            IceDoomSniperPea.buff2 = CustomCore.RegisterCustomBuff("夜影暗袭：冰毁狙击射手每11发将锁定场上韧性上限最高的僵尸。每轮攻击有概率触发连狙", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, bgType: CustomCore.BuffBgType.Night);
+            IceDoomSniperPea.buff2 = CustomCore.RegisterCustomBuff("夜影暗袭：冰毁狙击射手每11发将锁定场上韧性上限最高的僵尸。每轮攻击有概率触发连狙", BuffType.AdvancedBuff, () => Board.Instance.ObjectExist<IceDoomSniperPea>(), 5000, "#000000", (PlantType)IceDoomSniperPea.PlantID, bg: CustomCore.BuffBgType.Night);
             CustomCore.AddUltimatePlant((PlantType)IceDoomSniperPea.PlantID);
         }
     }

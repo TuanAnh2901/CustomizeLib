@@ -4,10 +4,10 @@ using Il2Cpp;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(QuickJacsonDriver.MelonLoader.Core), "QuickJacsonDriver", "1.0.0", "Salmon", null)]
+[assembly: MelonInfo(typeof(QuickJacksonDriver.MelonLoader.Core), "QuickJacksonDriver", "1.0.0", "Salmon", null)]
 [assembly: MelonGame("LanPiaoPiao", "PlantsVsZombiesRH")]
 
-namespace QuickJacsonDriver.MelonLoader
+namespace QuickJacksonDriver.MelonLoader
 {
     public class Core : MelonMod
     {
@@ -111,9 +111,10 @@ namespace QuickJacsonDriver.MelonLoader
         }
     }
 
-    [HarmonyPatch(typeof(JacksonDriver), nameof(JacksonDriver.DieEvent))]
+    [HarmonyPatch(typeof(JacksonDriver))]
     public static class JacksonDriver_DieEvent_Patch
     {
+        [HarmonyPatch(nameof(JacksonDriver.DieEvent))]
         [HarmonyPrefix]
         public static bool Prefix(JacksonDriver __instance)
         {
@@ -132,6 +133,22 @@ namespace QuickJacsonDriver.MelonLoader
                     CreateZombie.Instance.SetZombieWithMindControl(__instance.theZombieRow, ZombieType.QuickJacksonZombie, __instance.axis.transform.position.x, false);
                     CreateZombie.Instance.SetZombieWithMindControl(__instance.theZombieRow, ZombieType.Driver_b, __instance.axis.transform.position.x, false);
                 }
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPatch(nameof(JacksonDriver.BodyTakeDamage))]
+        [HarmonyPrefix]
+        public static bool Prefix(JacksonDriver __instance, ref int theDamage)
+        {
+            if ((int)__instance.theZombieType == QuickJacksonDriver.ZombieID)
+            {
+                __instance.theHealth -= __instance.GetDamage(theDamage, DmgType.Normal, true);
+                __instance.UpdateHealthText();
+                if (__instance.theHealth <= 0) __instance.Die();
+                if (__instance.theHealth < __instance.theMaxHealth / 3)
+                    __instance.anim.SetTrigger("shake");
                 return false;
             }
             return true;

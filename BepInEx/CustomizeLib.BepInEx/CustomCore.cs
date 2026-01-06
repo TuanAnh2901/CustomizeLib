@@ -172,8 +172,13 @@ namespace CustomizeLib.BepInEx
         /// <param name="id">僵尸id</param>
         /// <param name="name">僵尸名称</param>
         /// <param name="description">僵尸介绍</param>
-        public static void AddZombieAlmanacStrings(int id, string name, string description) =>
-            ZombiesAlmanac.Add((ZombieType)id, (name, description));
+        public static void AddZombieAlmanacStrings(int id, string name, string description)
+        {
+            String iName = name;
+            if (!Regex.Match(name, @"\(\d+\)$").Success)
+                iName = $"{name}({id})";
+            ZombiesAlmanac.Add((ZombieType)id, (iName, description));
+        }
 
         /// <summary>
         /// 获取嵌入dll里的ab包
@@ -312,37 +317,33 @@ namespace CustomizeLib.BepInEx
         #endregion
 #endif
 
-        /// <summary>
-        /// 注册自定义词条
-        /// </summary>
-        /// /// <param name="text">词条描述</param>
-        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
-        /// <param name="canUnlock">解锁条件</param>
-        /// <param name="cost">词条商店花费积分</param>
-        /// <param name="color">词条颜色</param>
-        /// <param name="plantType">选词条时展示植物的类型</param>
-        /// <param name="bgType">词条背景类型</param>
-        /// <param name="buffID">指定词条ID(不自动分配)</param>
-        /// <returns></returns>
-        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
-            string color, PlantType plantType = PlantType.Nothing, int buffID = -1, BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, 1, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
-
+        
         /// <summary>
         /// 注册自定义词条
         /// </summary>
         /// <param name="text">词条描述</param>
-        /// <param name="buffType">词条类型(普通，强究，僵尸)</param>
+        /// <param name="buffType">词条类型</param>
         /// <param name="canUnlock">解锁条件</param>
-        /// <param name="cost">词条商店花费积分</param>
-        /// <param name="level">词条最高等级</param>
-        /// <param name="color">词条颜色</param>
-        /// <param name="plantType">选词条时展示植物的类型</param>
-        /// <param name="buffID">指定词条ID(不自动分配)</param>
-        /// <param name="bgType">词条背景类型</param>
+        /// <param name="cost">价格</param>
+        /// <param name="color">颜色</param>
+        /// <param name="plantType">显示的植物类型</param>
+        /// <param name="level">最大等级</param>
+        /// <param name="bg">背景</param>
+        /// <returns>词条ID</returns>
+        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost,
+            string color = "#000000", PlantType plantType = PlantType.Nothing, int level = 1, BuffBgType bg = BuffBgType.Day) =>
+            RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bg);
+
+        /// <summary>
+        /// 注册自定义僵尸词条
+        /// </summary>
+        /// <param name="text">词条描述</param>
+        /// <param name="zombieType">显示的僵尸类型</param>
+        /// <param name="level">等级</param>
+        /// <param name="bg">背景</param>
         /// <returns></returns>
-        public static int RegisterCustomBuff(string text, BuffType buffType, Func<bool> canUnlock, int cost, int level,
-            string color, PlantType plantType = PlantType.Nothing, int buffID = -1,
-            BuffBgType bgType = BuffBgType.Day) => RegisterCustomBuff(text, buffType, canUnlock, cost, color, plantType, level, (TravelBuffOptionButton.BgType)(int)bgType, buffID: buffID);
+        public static int RegisterCustomDebuff(string text, ZombieType zombieType = ZombieType.NormalZombie, int level = 1, BuffBgType bg = BuffBgType.Day) =>
+            RegisterCustomBuff(text, BuffType.Debuff, () => true, 0, "#000000", PlantType.Nothing, level: level, bgType: (TravelBuffOptionButton.BgType)(int)bg, zombieType);
 
         /// <summary>
         /// 注册自定义词条
@@ -363,58 +364,38 @@ namespace CustomizeLib.BepInEx
             TravelBuffOptionButton.BgType bgType = TravelBuffOptionButton.BgType.Day, ZombieType zombieType = ZombieType.NormalZombie,
             int buffID = -1)
         {
-            //if (color is not null) text = $"<color={color}>{text}</color>";
+            int i = -1;
             switch (buffType)
             {
                 case BuffType.AdvancedBuff:
-                    {
-                        if (BuffArrayCount.Item1 == -1)
-                            BuffArrayCount.Item1 = TravelMgr.advancedBuffs.Count;
-                        int i = TravelMgr.advancedBuffs.Count;
-                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, i), buffID);
-                        CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
-                        TravelMgr.advancedBuffs.Add(i, text);
-                        if (level != 1)
-                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
-                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
-                            CustomBuffsBg.Add((buffType, i), bgType);
-                        return i;
-                    }
+                    i = TravelMgr.advancedBuffs.Count;
+                    CustomAdvancedBuffs.Add(i, (plantType, text, canUnlock, cost, color));
+                    TravelMgr.advancedBuffs.Add(i, text);
+                    break;
                 case BuffType.UltimateBuff:
-                    {
-                        if (BuffArrayCount.Item2 == -1)
-                            BuffArrayCount.Item2 = TravelMgr.ultimateBuffs.Count;
-                        int i = TravelMgr.ultimateBuffs.Count;
-                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, i), buffID);
-                        CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
-                        TravelMgr.ultimateBuffs.Add(i, text);
-                        if (level != 1)
-                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
-                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
-                            CustomBuffsBg.Add((buffType, i), bgType);
-                        return i;
-                    }
+                    i = TravelMgr.ultimateBuffs.Count;
+                    CustomUltimateBuffs.Add(i, (plantType, text, cost, color));
+                    TravelMgr.ultimateBuffs.Add(i, text);
+                    break;
                 case BuffType.Debuff:
-                    {
-                        if (BuffArrayCount.Item3 == -1)
-                            BuffArrayCount.Item3 = TravelMgr.debuffs.Count;
-                        int i = TravelMgr.debuffs.Count;
-                        if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
-                            CustomBuffIDMapping.Add((buffType, i), buffID);
-                        CustomDebuffs.Add(i, (text, zombieType));
-                        TravelMgr.debuffs.Add(i, text);
-                        TravelMgr.debuffIconPairs.Add(i, zombieType);
-                        if (level != 1)
-                            CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
-                        if (!CustomBuffsBg.ContainsKey((buffType, i)))
-                            CustomBuffsBg.Add((buffType, i), bgType);
-                        return i;
-                    }
-                default:
-                    return -1;
+                    i = TravelMgr.debuffs.Count;
+                    CustomDebuffs.Add(i, (text, zombieType));
+                    TravelMgr.debuffs.Add(i, text);
+                    TravelMgr.debuffIconPairs.Add(i, zombieType);
+                    break;
+                case BuffType.UnlockPlant:
+                    i = TravelMgr.unlocks.Count;
+                    CustomUnlockBuffs.Add(i, (plantType, text, cost, color));
+                    TravelMgr.unlocks.Add(i, text);
+                    break;
             }
+            if (buffID != -1 && !CustomBuffIDMapping.ContainsKey((buffType, buffID)))
+                CustomBuffIDMapping.Add((buffType, i), buffID);
+            if (level != 1)
+                CustomBuffsLevel.Add((buffType, i), (CustomBuffsLevel.Count, level));
+            if (!CustomBuffsBg.ContainsKey((buffType, i)))
+                CustomBuffsBg.Add((buffType, i), bgType);
+            return i;
         }
 
         /// <summary>
@@ -980,6 +961,21 @@ namespace CustomizeLib.BepInEx
         }
 
         /// <summary>
+        /// 注册自定义强究植物
+        /// </summary>
+        /// <param name="plantType">植物类型</param>
+        /// <param name="id">强究解锁id（注册时返回的）</param>
+        public static void RegisterCustomStrongUltimatePlant([NotNull] PlantType plantType, [NotNull] int id)
+        {
+            if (!TravelMgr.allStrongUltimtePlant.Contains(plantType))
+                TravelMgr.allStrongUltimtePlant.Add(plantType);
+            if (!CustomStrongUltimatePlants.ContainsKey(plantType))
+                CustomStrongUltimatePlants.Add(plantType, id);
+            else
+                CLogger.LogError($"Duplicate weak ultimate type: {plantType}");
+        }
+
+        /// <summary>
         /// 注册自定义融合洋芋配方
         /// </summary>
         /// <param name="left">左植物</param>
@@ -1249,14 +1245,19 @@ namespace CustomizeLib.BepInEx
         public static List<CheckCardState> checkBehaviours = new List<CheckCardState>();
 
         /// <summary>
-        /// 注册二创词条前的数组长度
-        /// </summary>
-        public static (int, int, int) BuffArrayCount = (-1, -1, -1);
-
-        /// <summary>
         /// 自定义弱究列表
         /// </summary>
         public static List<PlantType> CustomWeakUltimatePlants { get; set; } = [];
+
+        /// <summary>
+        /// 自定义解锁强究列表
+        /// </summary>
+        public static Dictionary<int, (PlantType, string, int, string?)> CustomUnlockBuffs { get; set; } = [];
+
+        /// <summary>
+        /// 自定义强究列表
+        /// </summary>
+        public static Dictionary<PlantType, int> CustomStrongUltimatePlants { get; set; } = [];
 
         /// <summary>
         /// 自定义种植植物在另一植物上事件（当前位置的植物的类型，鼠标上的植物类型），Action参数：当前位置的植物

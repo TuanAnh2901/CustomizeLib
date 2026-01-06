@@ -395,7 +395,7 @@ namespace ZombieBoss2Remake.BepInEx
 
         public void BanGoldMelon()
         {
-            foreach (var p in zombie.board.plantArray)
+            foreach (var p in zombie.board.boardEntity.plantArray)
             {
                 if (p is not null && p.thePlantType is PlantType.GoldMelon)
                 {
@@ -623,14 +623,14 @@ namespace ZombieBoss2Remake.BepInEx
         [HideFromIl2Cpp]
         public void Remove(ref HashSet<Vector2Int> boxes)
         {
-            if (board == null || board.plantHead == null)
+            if (board == null || board.boardEntity.plantHead == null)
                 throw new NullReferenceException();
 
             // 获取或创建植物筛选委托
             Func<Plant, bool> predicate = (p) => p is AdvancedFurnuce;
 
             // 筛选符合条件的植物
-            Il2CppSystem.Collections.Generic.List<Plant> filteredPlants = board.plantHead.FindAll(predicate);
+            Il2CppSystem.Collections.Generic.List<Plant> filteredPlants = board.boardEntity.plantHead.FindAll(predicate);
 
             // 遍历所有植物
             foreach (Plant plant in filteredPlants)
@@ -761,7 +761,7 @@ namespace ZombieBoss2Remake.BepInEx
 
                 if (UnityEngine.Random.Range(0, 4) == 2)
                 {
-                    foreach (var plant in Board.Instance.plantArray)
+                    foreach (var plant in Board.Instance.boardEntity.plantArray)
                     {
                         if (plant is not null)
                         {
